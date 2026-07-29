@@ -76,8 +76,22 @@ class SourceFile:
     def lines(self) -> List[str]:
         """File lines (cached)."""
         if self._lines is None:
-            self._lines = self.content.splitlines(keepends=True)
+            self._lines = self.content.splitlines(True)
         return self._lines
+    
+    def get_line(self, line_number: int) -> str:
+        """
+        Get line by number (1-indexed), stripping trailing newline.
+        
+        Args:
+            line_number: Line number
+            
+        Returns:
+            Line content without trailing newline
+        """
+        if line_number < 1 or line_number > self.line_count:
+            raise IndexError(f"Line {line_number} out of range")
+        return self.lines[line_number - 1].rstrip("\n\r")
     
     @property
     def line_count(self) -> int:
@@ -90,20 +104,6 @@ class SourceFile:
         if self._hash is None:
             self._hash = hashlib.sha256(self.content.encode()).hexdigest()
         return self._hash
-    
-    def get_line(self, line_number: int) -> str:
-        """
-        Get line by number (1-indexed).
-        
-        Args:
-            line_number: Line number
-            
-        Returns:
-            Line content
-        """
-        if line_number < 1 or line_number > self.line_count:
-            raise IndexError(f"Line {line_number} out of range")
-        return self.lines[line_number - 1]
     
     def get_lines(self, start: int, end: int) -> List[str]:
         """

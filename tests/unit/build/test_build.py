@@ -14,9 +14,11 @@ from src.compiler.core.build import (
     TaskResult,
     TaskScheduler,
     BuildCache,
+    CacheEntry,
     BuildProfile,
     BuildArtifact,
     ArtifactType,
+    CircularDependencyError,
 )
 
 

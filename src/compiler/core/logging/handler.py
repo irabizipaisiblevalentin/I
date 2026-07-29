@@ -131,27 +131,18 @@ class FileHandler(LogHandler):
         super().__init__(formatter)
         self._path = path
         self._encoding = encoding
-        self._file = None
-    
-    def _ensure_file(self) -> None:
-        """Ensure file is open."""
-        if self._file is None:
-            self._path.parent.mkdir(parents=True, exist_ok=True)
-            self._file = open(self._path, "a", encoding=self._encoding)
     
     def _emit(self, record: LogRecord) -> None:
-        """Write record to file."""
-        self._ensure_file()
-        message = self._formatter.format(record)
-        self._file.write(message + "\n")
+        """Write record to file, opening and closing per write."""
+        self._path.parent.mkdir(parents=True, exist_ok=True)
+        with open(self._path, "a", encoding=self._encoding) as f:
+            message = self._formatter.format(record)
+            f.write(message + "\n")
     
     def flush(self) -> None:
         """Flush file."""
-        if self._file:
-            self._file.flush()
+        pass
     
     def close(self) -> None:
-        """Close file."""
-        if self._file:
-            self._file.close()
-            self._file = None
+        """Close handler (no-op, file closed per write)."""
+        pass

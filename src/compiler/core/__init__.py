@@ -20,6 +20,9 @@ from .context import CompilerContext
 from .testing import CompilerTestHelper, GoldenTest, GoldenTestRunner
 from .benchmarks import Benchmark, BenchmarkSuite
 from .docs_generator import DocumentationGenerator
+from .errors import IError, CompilerError, ConfigError, FileIOError, InternalError, ValidationError, Panic
+from .result import Ok, Err, Result, Some, Nothing, Option
+from .utils import clamp, group_by, unique, flatten, chunks, find, find_index, partition, merge_dicts
 
 __all__ = [
     # Workspace
@@ -71,4 +74,29 @@ __all__ = [
     "BenchmarkSuite",
     # Docs
     "DocumentationGenerator",
+    # Errors
+    "IError",
+    "CompilerError",
+    "ConfigError",
+    "FileIOError",
+    "InternalError",
+    "ValidationError",
+    "Panic",
+    # Result
+    "Ok",
+    "Err",
+    "Result",
+    "Some",
+    "Nothing",
+    "Option",
+    # Utils
+    "clamp",
+    "group_by",
+    "unique",
+    "flatten",
+    "chunks",
+    "find",
+    "find_index",
+    "partition",
+    "merge_dicts",
 ]

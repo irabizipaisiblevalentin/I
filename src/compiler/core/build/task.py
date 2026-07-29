@@ -9,6 +9,8 @@ from enum import Enum
 from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional
 
+from .errors import CircularDependencyError
+
 
 class TaskType(Enum):
     """Build task types."""
