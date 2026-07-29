@@ -9,13 +9,13 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from enum import IntEnum, auto
-from typing import Any, Dict, Optional
+from typing import Any
 
 
 class TokenType(IntEnum):
     """
     All token types for the I language.
-    
+
     Using IntEnum for efficient comparison and memory usage.
     """
 
@@ -87,7 +87,6 @@ class TokenType(IntEnum):
     KW_IHEREZO = auto()                 # iherezo (end)
 
     # ── Keywords: Types / References ──────────────────────────
-    KW_UBUSA = auto()                   # ubusa (void)
     KW_SELF = auto()                    # self
     KW_SUPER = auto()                   # super
     KW_TRUE_EN = auto()                 # true (English)
@@ -154,14 +153,11 @@ class TokenType(IntEnum):
     QUESTION = auto()                   # ?
     QUESTION_DOT = auto()               # ?.
     AT = auto()                         # @
-    HASH = auto()                       # #
     BACKSLASH = auto()                  # \
 
     # ── Special ───────────────────────────────────────────────
     EOF = auto()
     NEWLINE = auto()
-    INDENT = auto()
-    DEDENT = auto()
 
     # ── Error ─────────────────────────────────────────────────
     ERROR = auto()
@@ -189,7 +185,7 @@ class TokenLocation:
 class Token:
     """
     A single token produced by the lexer.
-    
+
     Immutable value type with complete metadata.
     """
 
@@ -257,7 +253,7 @@ class Token:
 # start with following expression → KW_TANGA_EXPORT. For simplicity,
 # we map 'tanga' to KW_TANGA_YIELD by default and the parser can
 # reclassify. Same for 'cyangwa'.
-KEYWORDS: Dict[str, TokenType] = {
+KEYWORDS: dict[str, TokenType] = {
     # Control flow
     "niba": TokenType.KW_NIBA,
     "cyangwa": TokenType.KW_CYANGWA,
@@ -309,8 +305,7 @@ KEYWORDS: Dict[str, TokenType] = {
     # Blocks
     "iherezo": TokenType.KW_IHEREZO,
 
-    # Types / References
-    "ubusa": TokenType.KW_UBUSA,
+    # References
     "self": TokenType.KW_SELF,
     "super": TokenType.KW_SUPER,
 
@@ -321,7 +316,7 @@ KEYWORDS: Dict[str, TokenType] = {
 }
 
 # Boolean/null keyword values
-KEYWORD_VALUES: Dict[TokenType, Any] = {
+KEYWORD_VALUES: dict[TokenType, Any] = {
     TokenType.BOOLEAN_TRUE: True,
     TokenType.KW_TRUE_EN: True,
     TokenType.BOOLEAN_FALSE: False,
@@ -330,8 +325,9 @@ KEYWORD_VALUES: Dict[TokenType, Any] = {
     TokenType.KW_NULL_EN: None,
 }
 
-# Kinyarwanda boolean/null keywords
-KINYARWANDA_BOOLEANS: Dict[str, TokenType] = {
+# Kinyarwanda literal keywords
+KINYARWANDA_LITERALS: dict[str, TokenType] = {
     "yego": TokenType.BOOLEAN_TRUE,
     "oya": TokenType.BOOLEAN_FALSE,
+    "ubusa": TokenType.NULL,
 }

@@ -14,17 +14,14 @@ Tests all aspects of the I language lexer:
 - Edge cases
 """
 
-import pytest
 
 from src.compiler.lexer import (
-    Lexer,
+    LexerError,
+    LexerErrorCode,
     Token,
     TokenType,
     tokenize,
-    LexerError,
-    LexerErrorCode,
 )
-
 
 # ══════════════════════════════════════════════════════════════════
 # Helper
@@ -181,7 +178,6 @@ class TestKeywords:
 
     def test_type_keywords(self):
         """Test type keywords."""
-        assert_token_type("ubusa", TokenType.KW_UBUSA)
         assert_token_type("self", TokenType.KW_SELF)
         assert_token_type("super", TokenType.KW_SUPER)
 
@@ -191,11 +187,11 @@ class TestKeywords:
         assert_token_type("false", TokenType.KW_FALSE_EN)
         assert_token_type("null", TokenType.KW_NULL_EN)
 
-    def test_kinyarwanda_boolean_keywords(self):
-        """Test Kinyarwanda boolean keywords."""
+    def test_kinyarwanda_literals(self):
+        """Test Kinyarwanda literal keywords."""
         assert_token_type("yego", TokenType.BOOLEAN_TRUE)
         assert_token_type("oya", TokenType.BOOLEAN_FALSE)
-        assert_token_type("ubusa", TokenType.KW_UBUSA)
+        assert_token_type("ubusa", TokenType.NULL)
 
 
 # ══════════════════════════════════════════════════════════════════
@@ -316,7 +312,7 @@ class TestNumberLiterals:
         """Test binary with underscores."""
         tokens = lex("0b1_000_000")
         assert tokens[0].type == TokenType.INTEGER
-        assert tokens[0].value == 128
+        assert tokens[0].value == 64
 
     def test_float(self):
         """Test float literal."""
@@ -491,8 +487,8 @@ class TestComments:
         assert len(errors) == 0
 
     def test_doc_comment(self):
-        """Test documentation comment is skipped."""
-        tokens = lex("/// this is a doc comment\n42")
+        """Test documentation comment (#//) is skipped."""
+        tokens = lex("#// this is a doc comment\n42")
         assert len(tokens) == 1
         assert tokens[0].type == TokenType.INTEGER
 
@@ -712,7 +708,7 @@ class TestErrorHandling:
 
     def test_invalid_character(self):
         """Test invalid character error."""
-        errors = lex_errors("@")
+        errors = lex_errors("`")
         assert len(errors) > 0
         assert errors[0].code == LexerErrorCode.LEX001_INVALID_CHAR
 
@@ -736,7 +732,7 @@ class TestErrorHandling:
 
     def test_error_recovery(self):
         """Test error recovery continues tokenizing."""
-        tokens, errors = tokenize("42 @ 42")
+        tokens, errors = tokenize("42 ` 42")
         assert len(errors) > 0
         # Should still have tokens after the error
         ints = [t for t in tokens if t.type == TokenType.INTEGER]
@@ -744,7 +740,7 @@ class TestErrorHandling:
 
     def test_bilingual_error_message(self):
         """Test error has bilingual messages."""
-        errors = lex_errors("@")
+        errors = lex_errors("`")
         assert len(errors) > 0
         error = errors[0]
         assert error.message_en
@@ -758,7 +754,7 @@ class TestErrorHandling:
 
     def test_error_location(self):
         """Test error has correct location."""
-        errors = lex_errors("42 @")
+        errors = lex_errors("42 `")
         assert len(errors) > 0
         assert errors[0].line == 1
         assert errors[0].column == 4
@@ -799,9 +795,9 @@ class TestEdgeCases:
     def test_consecutive_operators(self):
         """Test consecutive operators."""
         tokens = lex("=====")
-        # Should be: == == =
+        # Greedy matching: === ==
         types = [t.type for t in tokens]
-        assert types == [TokenType.EQ_EQ, TokenType.EQ_EQ, TokenType.EQ]
+        assert types == [TokenType.IS_EQ, TokenType.EQ_EQ]
 
     def test_dot_dot_dot(self):
         """Test ... (spread)."""

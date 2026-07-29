@@ -7,20 +7,19 @@ pipeline: Source → UTF-8 Reader → DFA Engine → Keyword Resolver → Token 
 
 from __future__ import annotations
 
-import sys
 import unicodedata
-from typing import Any, List, Optional
+from collections.abc import Iterator
+from typing import Any
 
+from .errors import LexerError, LexerErrorCode, LexerErrorCollector
 from .token import (
-    KEYWORDS,
     KEYWORD_VALUES,
-    KINYARWANDA_BOOLEANS,
+    KEYWORDS,
+    KINYARWANDA_LITERALS,
     Token,
     TokenLocation,
     TokenType,
 )
-from .errors import LexerError, LexerErrorCode, LexerErrorCollector
-
 
 # ── Maximum values ────────────────────────────────────────────
 MAX_I64 = (2**63) - 1
@@ -29,7 +28,7 @@ MAX_I64 = (2**63) - 1
 class Lexer:
     """
     Production-quality lexer for the I programming language.
-    
+
     Implements DFA-based tokenization with:
     - Complete keyword recognition (Kinyarwanda + English)
     - Unicode identifier support
@@ -43,24 +42,30 @@ class Lexer:
     def __init__(self, source: str, filename: str = "<stdin>") -> None:
         """
         Initialize lexer.
-        
+
         Args:
             source: Source code string
             filename: Source filename for error messages
         """
+        # Strip UTF-8 BOM if present
+        if source.startswith("\uFEFF"):
+            source = source[1:]
+
         self._source = source
         self._filename = filename
         self._pos = 0
+        self._byte_pos = 0
         self._line = 1
         self._column = 1
-        self._tokens: List[Token] = []
+        self._tokens: list[Token] = []
         self._errors = LexerErrorCollector()
         self._start_pos = 0
+        self._start_byte_pos = 0
         self._start_line = 1
         self._start_column = 1
 
     @property
-    def tokens(self) -> List[Token]:
+    def tokens(self) -> list[Token]:
         """Tokenized output."""
         return self._tokens
 
@@ -74,20 +79,31 @@ class Lexer:
         """Check if any errors occurred."""
         return self._errors.has_errors
 
-    def tokenize(self) -> List[Token]:
+    def tokenize(self) -> list[Token]:
         """
         Tokenize the entire source.
-        
+
         Returns:
             List of tokens including EOF
         """
+        list(self._generate_tokens())
+        return self._tokens
+
+    def _generate_tokens(self) -> Iterator[Token]:
+        """Internal generator that yields tokens as they're scanned."""
         while not self._is_at_end:
             if self._errors.should_abort:
                 break
+            idx = len(self._tokens)
             self._scan_token()
-
+            for i in range(idx, len(self._tokens)):
+                yield self._tokens[i]
         self._tokens.append(self._make_token(TokenType.EOF, ""))
-        return self._tokens
+        yield self._tokens[-1]
+
+    def __iter__(self) -> Iterator[Token]:
+        """Iterate over tokens lazily (streaming support)."""
+        return self._generate_tokens()
 
     # ── Core Scanner ───────────────────────────────────────────
 
@@ -99,16 +115,29 @@ class Lexer:
             return
 
         self._start_pos = self._pos
+        self._start_byte_pos = self._byte_pos
         self._start_line = self._line
         self._start_column = self._column
         char = self._peek()
 
+        # ── Shebang ───────────────────────────────────────────
+        if char == "#" and self._pos == 0 and self._peek_next() == "!":
+            while not self._is_at_end and self._peek() != "\n":
+                self._advance()
+            return
+
         # ── Newlines ──────────────────────────────────────────
         if char == "\n":
+            col = self._column
+            byte_off = self._byte_pos
             self._advance()
-            self._tokens.append(
-                self._make_token(TokenType.NEWLINE, "\\n")
+            location = TokenLocation(
+                line=self._line,
+                column=col,
+                offset=byte_off,
+                span=1,
             )
+            self._tokens.append(Token(type=TokenType.NEWLINE, lexeme="\n", location=location))
             return
 
         # ── Single-character tokens ───────────────────────────
@@ -118,6 +147,11 @@ class Lexer:
             self._tokens.append(self._make_token(single, char))
             return
 
+        # ── Leading-dot floats ────────────────────────────────
+        if char == "." and self._peek_next() is not None and self._is_digit(self._peek_next()):
+            self._scan_decimal_number()
+            return
+
         # ── Multi-character operators ─────────────────────────
         if self._scan_operator():
             return
@@ -125,6 +159,12 @@ class Lexer:
         # ── Comments ──────────────────────────────────────────
         if char == "#":
             self._scan_comment()
+            return
+
+        # ── Raw string literals ───────────────────────────────
+        if (char == "r" or char == "R") and self._peek_next() == '"':
+            self._advance()  # consume r/R
+            self._scan_raw_string()
             return
 
         # ── String literals ───────────────────────────────────
@@ -170,7 +210,7 @@ class Lexer:
 
     # ── Single-character tokens ────────────────────────────────
 
-    def _single_char_token(self, char: str) -> Optional[TokenType]:
+    def _single_char_token(self, char: str) -> TokenType | None:
         """Map single character to token type."""
         mapping = {
             "(": TokenType.LPAREN,
@@ -390,9 +430,6 @@ class Lexer:
 
     def _scan_string(self) -> None:
         """Scan string literal (regular, triple-quoted)."""
-        start_line = self._line
-        start_col = self._column
-
         self._advance()  # consume opening "
 
         # Triple-quoted string: """..."""
@@ -440,6 +477,37 @@ class Lexer:
             self._pos,
         )
 
+    def _scan_raw_string(self) -> None:
+        """Scan raw string literal r\"...\" (no escape processing)."""
+        self._advance()  # consume opening "
+        parts: list[str] = []
+
+        while not self._is_at_end:
+            char = self._peek()
+            if char == '"':
+                self._advance()  # consume closing "
+                value = "".join(parts)
+                self._emit(TokenType.RAW_STRING, value)
+                self._errors.record_success()
+                return
+            if char == "\n":
+                self._errors.add(
+                    LexerErrorCode.LEX010_UNTERMINATED_RAW_STRING,
+                    self._line,
+                    self._column,
+                    self._pos,
+                )
+                return
+            self._advance()
+            parts.append(char)
+
+        self._errors.add(
+            LexerErrorCode.LEX010_UNTERMINATED_RAW_STRING,
+            self._line,
+            self._column,
+            self._pos,
+        )
+
     def _scan_triple_string(self) -> None:
         """Scan triple-quoted string."""
         parts: list[str] = []
@@ -480,7 +548,7 @@ class Lexer:
             self._pos,
         )
 
-    def _scan_escape(self) -> Optional[str]:
+    def _scan_escape(self) -> str | None:
         """Scan escape sequence. Returns the decoded character or None on error."""
         self._advance()  # consume backslash
         if self._is_at_end:
@@ -516,7 +584,7 @@ class Lexer:
         )
         return char
 
-    def _scan_unicode_escape(self, hex_len: int) -> Optional[str]:
+    def _scan_unicode_escape(self, hex_len: int) -> str | None:
         """Scan \\uXXXX or \\UXXXXXXXX escape."""
         hex_str = ""
         for _ in range(hex_len):
@@ -583,7 +651,6 @@ class Lexer:
 
     def _scan_number(self) -> None:
         """Scan numeric literal."""
-        start = self._pos
         char = self._peek()
 
         # Hex: 0x...
@@ -699,11 +766,12 @@ class Lexer:
 
     def _scan_decimal_number(self) -> None:
         """Scan decimal number (integer or float with optional exponent)."""
-        # Integer part
-        while not self._is_at_end and (self._is_digit(self._peek()) or self._peek() == "_"):
-            self._advance()
-
         is_float = False
+
+        # Integer part (may be empty for leading-dot floats)
+        if self._peek() != ".":
+            while not self._is_at_end and (self._is_digit(self._peek()) or self._peek() == "_"):
+                self._advance()
 
         # Fractional part
         if (
@@ -768,11 +836,11 @@ class Lexer:
         while not self._is_at_end and self._is_identifier_part(self._peek()):
             self._advance()
 
-        text = self._get_lexeme()
+        text = unicodedata.normalize("NFC", self._get_lexeme())
 
         # Check Kinyarwanda boolean/null literals
-        if text in KINYARWANDA_BOOLEANS:
-            token_type = KINYARWANDA_BOOLEANS[text]
+        if text in KINYARWANDA_LITERALS:
+            token_type = KINYARWANDA_LITERALS[text]
             self._emit(token_type, KEYWORD_VALUES[token_type])
             self._errors.record_success()
             return
@@ -806,6 +874,7 @@ class Lexer:
         """Consume and return current character."""
         char = self._source[self._pos]
         self._pos += 1
+        self._byte_pos += len(char.encode("utf-8"))
         if char == "\n":
             self._line += 1
             self._column = 1
@@ -813,19 +882,19 @@ class Lexer:
             self._column += 1
         return char
 
-    def _peek(self) -> Optional[str]:
+    def _peek(self) -> str | None:
         """Look at current character without consuming."""
         if self._pos >= len(self._source):
             return None
         return self._source[self._pos]
 
-    def _peek_next(self) -> Optional[str]:
+    def _peek_next(self) -> str | None:
         """Look at next character without consuming."""
         if self._pos + 1 >= len(self._source):
             return None
         return self._source[self._pos + 1]
 
-    def _peek_ahead(self, offset: int) -> Optional[str]:
+    def _peek_ahead(self, offset: int) -> str | None:
         """Look ahead by offset characters."""
         idx = self._pos + offset
         if idx >= len(self._source):
@@ -846,7 +915,6 @@ class Lexer:
 
     def _get_lexeme(self) -> str:
         """Get lexeme from start position to current position."""
-        # We need to track start position
         return self._source[self._start_pos:self._pos]
 
     def _make_token(self, token_type: TokenType, lexeme: str) -> Token:
@@ -854,7 +922,7 @@ class Lexer:
         location = TokenLocation(
             line=self._line,
             column=self._column - len(lexeme) if lexeme else self._column,
-            offset=self._pos - len(lexeme) if lexeme else self._pos,
+            offset=self._byte_pos - len(lexeme.encode("utf-8")) if lexeme else self._byte_pos,
             span=len(lexeme.encode("utf-8")),
         )
         return Token(type=token_type, lexeme=lexeme, location=location)
@@ -868,58 +936,60 @@ class Lexer:
             location=TokenLocation(
                 line=self._start_line,
                 column=self._start_column,
-                offset=self._start_pos,
-                span=self._pos - self._start_pos,
+                offset=self._start_byte_pos,
+                span=self._byte_pos - self._start_byte_pos,
             ),
             value=value,
         )
         self._tokens.append(token)
 
-    def _is_digit(self, char: Optional[str]) -> bool:
+    def _is_digit(self, char: str | None) -> bool:
         """Check if character is a digit."""
         return char is not None and char.isdigit()
 
-    def _is_hex_digit(self, char: Optional[str]) -> bool:
+    def _is_hex_digit(self, char: str | None) -> bool:
         """Check if character is a hex digit."""
         return char is not None and (
             char.isdigit() or char.lower() in "abcdef"
         )
 
-    def _is_octal_digit(self, char: Optional[str]) -> bool:
+    def _is_octal_digit(self, char: str | None) -> bool:
         """Check if character is an octal digit."""
         return char is not None and char in "01234567"
 
-    def _is_identifier_start(self, char: Optional[str]) -> bool:
+    def _is_identifier_start(self, char: str | None) -> bool:
         """Check if character can start an identifier."""
         if char is None:
             return False
         if char.isascii() and (char.isalpha() or char == "_"):
             return True
-        if char.isalpha() and not char.isascii():
-            return True
+        if not char.isascii() and char.isalpha():
+            cat = unicodedata.category(char)
+            return cat in ("Lu", "Ll", "Lt", "Lm", "Lo", "Nl")
         return False
 
-    def _is_identifier_part(self, char: Optional[str]) -> bool:
+    def _is_identifier_part(self, char: str | None) -> bool:
         """Check if character can be part of an identifier."""
         if char is None:
             return False
         if char.isascii() and (char.isalnum() or char == "_"):
             return True
-        if char.isalnum() and not char.isascii():
-            return True
+        if not char.isascii() and char.isalnum():
+            cat = unicodedata.category(char)
+            return cat in ("Lu", "Ll", "Lt", "Lm", "Lo", "Nl", "Mn", "Mc", "Nd", "Pc")
         return False
 
 
 # ── Convenience Function ────────────────────────────────────────
 
-def tokenize(source: str, filename: str = "<stdin>") -> tuple[List[Token], List[LexerError]]:
+def tokenize(source: str, filename: str = "<stdin>") -> tuple[list[Token], list[LexerError]]:
     """
     Tokenize source code.
-    
+
     Args:
         source: Source code string
         filename: Source filename
-        
+
     Returns:
         Tuple of (tokens, errors)
     """

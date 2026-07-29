@@ -8,9 +8,8 @@ explanation, and possible solution.
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
-from enum import Enum, auto
-from typing import List, Optional
+from dataclasses import dataclass
+from enum import Enum
 
 
 class LexerErrorCode(Enum):
@@ -19,15 +18,12 @@ class LexerErrorCode(Enum):
     LEX001_INVALID_CHAR = "LEX001"
     LEX002_UNTERMINATED_STRING = "LEX002"
     LEX003_INVALID_NUMBER = "LEX003"
-    LEX004_INVALID_UNICODE = "LEX004"
     LEX005_INVALID_ESCAPE = "LEX005"
     LEX006_UNTERMINATED_COMMENT = "LEX006"
     LEX007_INTEGER_OVERFLOW = "LEX007"
-    LEX008_INVALID_IDENTIFIER = "LEX008"
     LEX009_UNTERMINATED_CHAR = "LEX009"
     LEX010_UNTERMINATED_RAW_STRING = "LEX010"
     LEX011_UNTERMINATED_TRIPLE_STRING = "LEX011"
-    LEX012_INVALID_ESCAPE_SEQUENCE = "LEX012"
 
 
 # Error messages: (English, Kinyarwanda)
@@ -44,10 +40,6 @@ ERROR_MESSAGES: dict[LexerErrorCode, tuple[str, str]] = {
         "Invalid number format",
         "Ibaneco ry'ubwoko butari busanzwe",
     ),
-    LexerErrorCode.LEX004_INVALID_UNICODE: (
-        "Invalid UTF-8 sequence",
-        "Ikibazo cy'ubwoko bwa UTF-8",
-    ),
     LexerErrorCode.LEX005_INVALID_ESCAPE: (
         "Unknown escape sequence '\\{char}'",
         "Igice kitashyizwe mu buryo '\\{char}'",
@@ -59,10 +51,6 @@ ERROR_MESSAGES: dict[LexerErrorCode, tuple[str, str]] = {
     LexerErrorCode.LEX007_INTEGER_OVERFLOW: (
         "Integer literal exceeds maximum value (2^63 - 1)",
         "Inameco ryarenze urugero rukuru (2^63 - 1)",
-    ),
-    LexerErrorCode.LEX008_INVALID_IDENTIFIER: (
-        "Invalid identifier",
-        "Izina riri mu buryo butari busanzwe",
     ),
     LexerErrorCode.LEX009_UNTERMINATED_CHAR: (
         "Unterminated character literal",
@@ -76,10 +64,6 @@ ERROR_MESSAGES: dict[LexerErrorCode, tuple[str, str]] = {
         "Unterminated multi-line string (expected '\"\"\"')",
         "Ijambo ry'ubwoko rirenze umurongo ritagifungiye",
     ),
-    LexerErrorCode.LEX012_INVALID_ESCAPE_SEQUENCE: (
-        "Invalid escape sequence '\\{char}'",
-        "Igice c'ubwoko kitashyizwe mu buryo '\\{char}'",
-    ),
 }
 
 # Suggestions for each error
@@ -90,24 +74,18 @@ ERROR_SUGGESTIONS: dict[LexerErrorCode, str] = {
         "Add a closing double quote '\"' at the end of the string",
     LexerErrorCode.LEX003_INVALID_NUMBER:
         "Ensure the number follows the format: digits, optionally with '.' and exponent",
-    LexerErrorCode.LEX004_INVALID_UNICODE:
-        "Ensure the file is saved as UTF-8 encoding",
     LexerErrorCode.LEX005_INVALID_ESCAPE:
         "Use a valid escape: \\n, \\t, \\r, \\\\, \\\", \\', \\0, \\uXXXX, \\UXXXXXXXX",
     LexerErrorCode.LEX006_UNTERMINATED_COMMENT:
         "Add '=#' to close the multi-line comment",
     LexerErrorCode.LEX007_INTEGER_OVERFLOW:
         "Use a smaller integer value or split into multiple operations",
-    LexerErrorCode.LEX008_INVALID_IDENTIFIER:
-        "Identifiers must start with a letter or underscore, and contain only letters, digits, or underscores",
     LexerErrorCode.LEX009_UNTERMINATED_CHAR:
-        "Add a closing single quote '}' at the end of the character",
+        "Add a closing single quote \"'\" at the end of the character",
     LexerErrorCode.LEX010_UNTERMINATED_RAW_STRING:
         "Add a closing '\"' after the raw string content",
     LexerErrorCode.LEX011_UNTERMINATED_TRIPLE_STRING:
         "Add '\"\"\"' to close the multi-line string",
-    LexerErrorCode.LEX012_INVALID_ESCAPE_SEQUENCE:
-        "Use a valid escape sequence",
 }
 
 
@@ -162,7 +140,7 @@ class LexerError:
 class LexerErrorCollector:
     """
     Collects lexer errors during tokenization.
-    
+
     Enforces limits: max 100 errors per file, aborts after
     10 consecutive errors without successful tokenization.
     """
@@ -171,11 +149,11 @@ class LexerErrorCollector:
     MAX_CONSECUTIVE_ERRORS = 10
 
     def __init__(self) -> None:
-        self._errors: List[LexerError] = []
+        self._errors: list[LexerError] = []
         self._consecutive_errors = 0
 
     @property
-    def errors(self) -> List[LexerError]:
+    def errors(self) -> list[LexerError]:
         """All collected errors."""
         return self._errors.copy()
 
@@ -192,7 +170,10 @@ class LexerErrorCollector:
     @property
     def should_abort(self) -> bool:
         """Check if lexer should abort due to too many errors."""
-        return len(self._errors) >= self.MAX_ERRORS
+        return (
+            len(self._errors) >= self.MAX_ERRORS
+            or self._consecutive_errors >= self.MAX_CONSECUTIVE_ERRORS
+        )
 
     def record_success(self) -> None:
         """Record successful tokenization (resets consecutive counter)."""
@@ -208,7 +189,7 @@ class LexerErrorCollector:
     ) -> LexerError:
         """
         Add an error.
-        
+
         Returns the created error, or None if abort conditions met.
         """
         if self.should_abort:
@@ -224,16 +205,6 @@ class LexerErrorCollector:
         self._errors.append(error)
 
         self._consecutive_errors += 1
-        if self._consecutive_errors >= self.MAX_CONSECUTIVE_ERRORS:
-            # Add abort error
-            abort = LexerError(
-                code=LexerErrorCode.LEX001_INVALID_CHAR,
-                line=line,
-                column=column,
-                offset=offset,
-                char="",
-            )
-            self._errors.append(abort)
 
         return error
 
