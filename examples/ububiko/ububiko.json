@@ -1,0 +1,10 @@
+{
+    "name": "my-app",
+    "version": "0.1.0",
+    "database": {
+        "type": "sqlite",
+        "name": "app.db"
+    },
+    "migrations_dir": "migrations",
+    "models_dir": "models"
+}

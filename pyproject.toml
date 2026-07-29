@@ -1,0 +1,66 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "i-lang"
+version = "0.1.0"
+description = "I Programming Language - The world's first professional programming language designed around Kinyarwanda"
+readme = "README.md"
+requires-python = ">=3.8"
+license = {text = "MIT"}
+authors = [
+    {name = "Irabizi Paisible Valentin", email = "founder@i-lang.rw"}
+]
+keywords = [
+    "programming-language",
+    "compiler",
+    "kinyarwanda",
+    "africa",
+    "education",
+]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Topic :: Software Development :: Compilers",
+    "Topic :: Software Development :: Interpreters",
+]
+
+[project.urls]
+Homepage = "https://github.com/i-lang/i-lang"
+Documentation = "https://docs.i-lang.rw"
+Repository = "https://github.com/i-lang/i-lang"
+Issues = "https://github.com/i-lang/i-lang/issues"
+
+[project.scripts]
+i = "compiler.compiler:main"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["compiler*", "vm*", "isoko*", "ufa*", "urubuga*", "ibiro*", "mobile*", "uam*", "ububiko*", "ubwenge*", "imikino*", "sisitemu*", "igicu*", "istudio*", "ideveloper*"]
+
+[tool.setuptools.package-data]
+"compiler" = ["py.typed"]
+"vm" = ["py.typed"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = "test_*.py"
+python_classes = "Test*"
+python_functions = "test_*"
+addopts = "-v --tb=short --strict-markers --disable-warnings"
+pythonpath = ["src"]
+importmode = "importlib"
+markers = [
+    "unit: Unit tests",
+    "integration: Integration tests",
+    "regression: Regression tests",
+    "performance: Performance tests",
+    "slow: Slow running tests",
+]

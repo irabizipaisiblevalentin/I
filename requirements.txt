@@ -1,0 +1,8 @@
+# I Programming Language - Dependencies
+
+# No external dependencies required for the core compiler
+# The compiler is built with Python standard library only
+
+# Optional dependencies for development and testing
+pytest>=7.0.0
+pytest-cov>=4.0.0

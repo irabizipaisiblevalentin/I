@@ -1,0 +1,27 @@
+name: my-cross-platform-app
+version: 0.1.0
+author: I Developer
+platforms:
+  - web
+  - desktop
+  - mobile
+shared_dirs:
+  - shared/logic
+  - shared/models
+  - shared/services
+  - shared/state
+  - shared/networking
+  - shared/database
+ui_dir: ui
+web:
+  entry: web/main.i
+  output: dist/web
+  framework: urubuga
+desktop:
+  entry: desktop/main.i
+  output: dist/desktop
+  framework: ibiro
+mobile:
+  entry: mobile/main.i
+  output: dist/mobile
+  framework: mobile

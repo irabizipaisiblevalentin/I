@@ -1,0 +1,54 @@
+# Example I Project Configuration
+# This file demonstrates a complete ilang.toml configuration
+
+[package]
+name = "my-i-app"
+version = "0.1.0"
+edition = "2024"
+authors = ["Developer <dev@example.com>"]
+description = "My first I application"
+license = "MIT"
+repository = "https://github.com/user/my-i-app"
+keywords = ["example", "tutorial"]
+categories = ["command-line", "learning"]
+
+# Dependencies from registry
+[dependencies]
+ilang-std = "1.0.0"
+ilang-chrono = "0.2.0"
+
+# Local path dependency
+[dependencies.my-lib]
+path = "../my-lib"
+
+# Git dependency
+[dependencies.some-lib]
+git = "https://github.com/user/some-lib"
+rev = "main"
+
+# Development dependencies
+[dev-dependencies]
+ilang-test = "1.0.0"
+ilang-bench = "0.1.0"
+
+# Build dependencies
+[build-dependencies]
+ilang-build = "0.1.0"
+
+# Workspace configuration (for multi-package projects)
+[workspace]
+members = [
+    "packages/core",
+    "packages/cli",
+    "packages/web",
+]
+
+# Build profiles
+[profile.dev]
+opt-level = 0
+debug = true
+
+[profile.release]
+opt-level = 3
+lto = true
+codegen-units = 1
