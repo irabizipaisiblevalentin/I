@@ -4,18 +4,18 @@ Workspace Configuration
 Manages I project discovery, loading, and configuration.
 """
 
-from .config import Config, Dependency, DependencySource, WorkspaceConfig, ProfileConfig
-from .loader import ConfigLoader
-from .validator import ConfigValidator, ValidationError
-from .resolver import PathResolver
-from .workspace import Workspace
+from .config import Config, Dependency, DependencySource, ProfileConfig, WorkspaceConfig
 from .errors import (
-    WorkspaceError,
     ConfigNotFoundError,
     ConfigParseError,
     ConfigValidationError,
+    WorkspaceError,
     WorkspaceMemberError,
 )
+from .loader import ConfigLoader
+from .resolver import PathResolver
+from .validator import ConfigValidator, ValidationError
+from .workspace import Workspace
 
 __all__ = [
     # Main classes
@@ -25,13 +25,13 @@ __all__ = [
     "DependencySource",
     "WorkspaceConfig",
     "ProfileConfig",
-    
+
     # Utilities
     "ConfigLoader",
     "ConfigValidator",
     "ValidationError",
     "PathResolver",
-    
+
     # Errors
     "WorkspaceError",
     "ConfigNotFoundError",

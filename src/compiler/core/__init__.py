@@ -4,25 +4,40 @@ Compiler Core
 Provides foundational utilities for the I compiler.
 """
 
-from .workspace import Workspace, WorkspaceConfig
-from .build import BuildPipeline, BuildCache
-from .logging import Logger, get_logger, LogLevel
-from .config import ConfigLoader, CompilerConfig
-from .source import SourceFile, Position, Span, PositionTracker
-from .unicode import UTF8Reader, is_valid_identifier
-from .diagnostics import DiagnosticEngine, Diagnostic, Severity, ErrorCode
+from .benchmarks import Benchmark, BenchmarkSuite
+from .build import BuildCache, BuildPipeline
+from .config import CompilerConfig, ConfigLoader
+from .context import CompilerContext
+from .diagnostics import Diagnostic, DiagnosticEngine, ErrorCode, Severity
+from .docs_generator import DocumentationGenerator
+from .errors import CompilerError, ConfigError, FileIOError, IError, InternalError, PanicError, ValidationError
+from .features import FeatureFlagManager
 from .formatting import MessageFormatter
 from .io import FileManager
+from .logging import Logger, LogLevel, get_logger
 from .memory import Arena, MemoryTracker
-from .timing import Timer, TimingCollector
-from .features import FeatureFlagManager
-from .context import CompilerContext
+from .result import Err, Nothing, Ok, Option, Result, Some
+from .source import Position, PositionTracker, SourceFile, Span
 from .testing import CompilerTestHelper, GoldenTest, GoldenTestRunner
-from .benchmarks import Benchmark, BenchmarkSuite
-from .docs_generator import DocumentationGenerator
-from .errors import IError, CompilerError, ConfigError, FileIOError, InternalError, ValidationError, Panic
-from .result import Ok, Err, Result, Some, Nothing, Option
-from .utils import clamp, group_by, unique, flatten, chunks, find, find_index, partition, merge_dicts
+from .timing import Timer, TimingCollector
+from .unicode import UTF8Reader, is_valid_identifier
+from .utils import (
+    camel_to_snake,
+    chunks,
+    clamp,
+    find,
+    find_index,
+    flatten,
+    format_bytes,
+    format_duration,
+    group_by,
+    merge_dicts,
+    partition,
+    pluralize,
+    snake_to_camel,
+    unique,
+)
+from .workspace import Workspace, WorkspaceConfig
 
 __all__ = [
     # Workspace
@@ -81,7 +96,7 @@ __all__ = [
     "FileIOError",
     "InternalError",
     "ValidationError",
-    "Panic",
+    "PanicError",
     # Result
     "Ok",
     "Err",
@@ -99,4 +114,9 @@ __all__ = [
     "find_index",
     "partition",
     "merge_dicts",
+    "camel_to_snake",
+    "snake_to_camel",
+    "pluralize",
+    "format_bytes",
+    "format_duration",
 ]

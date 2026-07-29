@@ -5,7 +5,6 @@ Log formatters.
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from datetime import datetime
 
 from .level import LogLevel
 from .record import LogRecord
@@ -13,15 +12,15 @@ from .record import LogRecord
 
 class LogFormatter(ABC):
     """Base log formatter."""
-    
+
     @abstractmethod
     def format(self, record: LogRecord) -> str:
         """
         Format log record.
-        
+
         Args:
             record: Log record to format
-            
+
         Returns:
             Formatted string
         """
@@ -30,16 +29,16 @@ class LogFormatter(ABC):
 
 class PlainFormatter(LogFormatter):
     """Plain text formatter."""
-    
+
     def __init__(self, fmt: str = "%(timestamp)s %(level)s [%(name)s] %(message)s") -> None:
         """
         Initialize formatter.
-        
+
         Args:
             fmt: Format string
         """
         self._fmt = fmt
-    
+
     def format(self, record: LogRecord) -> str:
         """Format log record."""
         return self._fmt % {
@@ -55,7 +54,7 @@ class PlainFormatter(LogFormatter):
 
 class ColoredFormatter(LogFormatter):
     """Colored terminal formatter."""
-    
+
     # ANSI color codes
     COLORS = {
         LogLevel.TRACE: "\033[37m",      # White
@@ -66,11 +65,11 @@ class ColoredFormatter(LogFormatter):
         LogLevel.CRITICAL: "\033[35m",   # Magenta
     }
     RESET = "\033[0m"
-    
+
     def format(self, record: LogRecord) -> str:
         """Format log record with colors."""
         color = self.COLORS.get(record.level, "")
-        
+
         return (
             f"{color}"
             f"{record.timestamp.strftime('%H:%M:%S')} "
@@ -83,18 +82,18 @@ class ColoredFormatter(LogFormatter):
 
 class JsonFormatter(LogFormatter):
     """JSON formatter."""
-    
+
     def format(self, record: LogRecord) -> str:
         """Format log record as JSON."""
         import json
-        
+
         data = {
             "timestamp": record.timestamp.isoformat(),
             "level": record.level.name,
             "logger": record.logger_name,
             "message": record.message,
         }
-        
+
         if record.module:
             data["module"] = record.module
         if record.function:
@@ -103,5 +102,5 @@ class JsonFormatter(LogFormatter):
             data["line"] = record.line
         if record.extra:
             data["extra"] = record.extra
-        
+
         return json.dumps(data)

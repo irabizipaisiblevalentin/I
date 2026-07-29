@@ -6,25 +6,23 @@ Provides common utility functions for the I compiler.
 
 from __future__ import annotations
 
-import os
 import re
-from pathlib import Path
-from typing import (Any, Callable, Dict, Iterator, List, Optional, Set,
-                    Tuple, TypeVar)
+from collections.abc import Callable, Iterator
+from typing import Any, TypeVar
 
 T = TypeVar("T")
 U = TypeVar("U")
 
 
-def clamp(value: T, min_value: T, max_value: T) -> T:
+def clamp[T](value: T, min_value: T, max_value: T) -> T:
     """
     Clamp a value between min and max.
-    
+
     Args:
         value: Value to clamp
         min_value: Minimum bound
         max_value: Maximum bound
-        
+
     Returns:
         Clamped value
     """
@@ -35,18 +33,18 @@ def clamp(value: T, min_value: T, max_value: T) -> T:
     return value
 
 
-def group_by(items: List[T], key_fn: Callable[[T], U]) -> Dict[U, List[T]]:
+def group_by[T, U](items: list[T], key_fn: Callable[[T], U]) -> dict[U, list[T]]:
     """
     Group items by a key function.
-    
+
     Args:
         items: Items to group
         key_fn: Key extraction function
-        
+
     Returns:
         Dictionary mapping keys to item lists
     """
-    result: Dict[U, List[T]] = {}
+    result: dict[U, list[T]] = {}
     for item in items:
         key = key_fn(item)
         if key not in result:
@@ -55,18 +53,18 @@ def group_by(items: List[T], key_fn: Callable[[T], U]) -> Dict[U, List[T]]:
     return result
 
 
-def unique(items: List[T]) -> List[T]:
+def unique[T](items: list[T]) -> list[T]:
     """
     Return unique items preserving order.
-    
+
     Args:
         items: Items to deduplicate
-        
+
     Returns:
         Deduplicated list
     """
-    seen: Set[T] = set()
-    result: List[T] = []
+    seen: set[T] = set()
+    result: list[T] = []
     for item in items:
         if item not in seen:
             seen.add(item)
@@ -74,27 +72,27 @@ def unique(items: List[T]) -> List[T]:
     return result
 
 
-def flatten(items: List[List[T]]) -> List[T]:
+def flatten[T](items: list[list[T]]) -> list[T]:
     """
     Flatten a list of lists.
-    
+
     Args:
         items: Nested list
-        
+
     Returns:
         Flattened list
     """
     return [item for sublist in items for item in sublist]
 
 
-def chunks(items: List[T], size: int) -> Iterator[List[T]]:
+def chunks[T](items: list[T], size: int) -> Iterator[list[T]]:
     """
     Split list into chunks.
-    
+
     Args:
         items: List to split
         size: Chunk size
-        
+
     Yields:
         Chunks of the list
     """
@@ -102,14 +100,14 @@ def chunks(items: List[T], size: int) -> Iterator[List[T]]:
         yield items[i:i + size]
 
 
-def find(items: List[T], predicate: Callable[[T], bool]) -> Optional[T]:
+def find[T](items: list[T], predicate: Callable[[T], bool]) -> T | None:
     """
     Find first item matching predicate.
-    
+
     Args:
         items: Items to search
         predicate: Match function
-        
+
     Returns:
         First match or None
     """
@@ -119,14 +117,14 @@ def find(items: List[T], predicate: Callable[[T], bool]) -> Optional[T]:
     return None
 
 
-def find_index(items: List[T], predicate: Callable[[T], bool]) -> int:
+def find_index[T](items: list[T], predicate: Callable[[T], bool]) -> int:
     """
     Find index of first item matching predicate.
-    
+
     Args:
         items: Items to search
         predicate: Match function
-        
+
     Returns:
         Index or -1
     """
@@ -136,19 +134,19 @@ def find_index(items: List[T], predicate: Callable[[T], bool]) -> int:
     return -1
 
 
-def partition(items: List[T], predicate: Callable[[T], bool]) -> Tuple[List[T], List[T]]:
+def partition[T](items: list[T], predicate: Callable[[T], bool]) -> tuple[list[T], list[T]]:
     """
     Partition items by predicate.
-    
+
     Args:
         items: Items to partition
         predicate: Partition function
-        
+
     Returns:
         Tuple of (matching, non-matching)
     """
-    matched: List[T] = []
-    unmatched: List[T] = []
+    matched: list[T] = []
+    unmatched: list[T] = []
     for item in items:
         if predicate(item):
             matched.append(item)
@@ -157,17 +155,17 @@ def partition(items: List[T], predicate: Callable[[T], bool]) -> Tuple[List[T], 
     return matched, unmatched
 
 
-def merge_dicts(*dicts: Dict[str, Any]) -> Dict[str, Any]:
+def merge_dicts(*dicts: dict[str, Any]) -> dict[str, Any]:
     """
     Merge dictionaries (later keys override earlier).
-    
+
     Args:
         *dicts: Dictionaries to merge
-        
+
     Returns:
         Merged dictionary
     """
-    result: Dict[str, Any] = {}
+    result: dict[str, Any] = {}
     for d in dicts:
         result.update(d)
     return result
@@ -176,10 +174,10 @@ def merge_dicts(*dicts: Dict[str, Any]) -> Dict[str, Any]:
 def camel_to_snake(name: str) -> str:
     """
     Convert CamelCase to snake_case.
-    
+
     Args:
         name: CamelCase string
-        
+
     Returns:
         snake_case string
     """
@@ -191,25 +189,25 @@ def camel_to_snake(name: str) -> str:
 def snake_to_camel(name: str) -> str:
     """
     Convert snake_case to CamelCase.
-    
+
     Args:
         name: snake_case string
-        
+
     Returns:
         CamelCase string
     """
     return "".join(word.capitalize() for word in name.split("_"))
 
 
-def pluralize(count: int, singular: str, plural: Optional[str] = None) -> str:
+def pluralize(count: int, singular: str, plural: str | None = None) -> str:
     """
     Pluralize word based on count.
-    
+
     Args:
         count: Item count
         singular: Singular form
         plural: Plural form (default: singular + 's')
-        
+
     Returns:
         Properly pluralized word
     """
@@ -221,10 +219,10 @@ def pluralize(count: int, singular: str, plural: Optional[str] = None) -> str:
 def format_bytes(size: int) -> str:
     """
     Format byte size as human-readable string.
-    
+
     Args:
         size: Size in bytes
-        
+
     Returns:
         Human-readable size string
     """
@@ -238,10 +236,10 @@ def format_bytes(size: int) -> str:
 def format_duration(seconds: float) -> str:
     """
     Format duration as human-readable string.
-    
+
     Args:
         seconds: Duration in seconds
-        
+
     Returns:
         Human-readable duration string
     """

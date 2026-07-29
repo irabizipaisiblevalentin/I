@@ -16,8 +16,13 @@ from isoko.ideveloper.itegeko import (
     _cmd_learn,
     _cmd_certify,
     _cmd_profile,
+    _cmd_research,
     _cmd_website,
     _cmd_package,
+    _cmd_foundation,
+    _cmd_labs,
+    _cmd_scholarships,
+    _cmd_conference,
 )
 
 
@@ -211,4 +216,162 @@ def test_cmd_package_yank():
 def test_cmd_package_verify():
     args = _make_args("package", command="verify", name="test-pkg", version="")
     code = _cmd_package(args)
+    assert code == 0
+
+
+# ── New command tests ─────────────────────────────────────────────────
+
+def test_cmd_learn_academy():
+    args = _make_args("learn", command="academy", id="", code="", name="", path_id="")
+    code = _cmd_learn(args)
+    assert code == 0
+
+
+def test_cmd_learn_paths():
+    args = _make_args("learn", command="paths", id="path-1", code="", name="", path_id="")
+    code = _cmd_learn(args)
+    assert code == 0
+
+
+def test_cmd_learn_achievements():
+    args = _make_args("learn", command="achievements", id="", code="", name="", path_id="")
+    code = _cmd_learn(args)
+    assert code == 0
+
+
+def test_cmd_learn_assignments():
+    args = _make_args("learn", command="assignments", id="", code="", name="HW1", path_id="")
+    code = _cmd_learn(args)
+    assert code == 0
+
+
+def test_cmd_docs_books():
+    args = _make_args("docs", command="books", query="", book="Intro to I")
+    code = _cmd_docs(args)
+    assert code == 0
+
+
+def test_cmd_docs_books_no_book():
+    args = _make_args("docs", command="books", query="", book="")
+    code = _cmd_docs(args)
+    assert code == 0
+
+
+def test_cmd_research_groups():
+    args = _make_args("research", command="groups", id="group-1", name="")
+    code = _cmd_research(args)
+    assert code == 0
+
+
+def test_cmd_foundation_info():
+    args = _make_args("foundation", command="info")
+    code = _cmd_foundation(args)
+    assert code == 0
+
+
+def test_cmd_foundation_members():
+    args = _make_args("foundation", command="members")
+    code = _cmd_foundation(args)
+    assert code == 0
+
+
+def test_cmd_foundation_board():
+    args = _make_args("foundation", command="board")
+    code = _cmd_foundation(args)
+    assert code == 0
+
+
+def test_cmd_foundation_policies():
+    args = _make_args("foundation", command="policies")
+    code = _cmd_foundation(args)
+    assert code == 0
+
+
+def test_cmd_foundation_charter():
+    args = _make_args("foundation", command="charter")
+    code = _cmd_foundation(args)
+    assert code == 0
+
+
+def test_cmd_labs_list():
+    args = _make_args("labs", command="list", id="", step="")
+    code = _cmd_labs(args)
+    assert code == 0
+
+
+def test_cmd_labs_start():
+    args = _make_args("labs", command="start", id="lab-intro-ai", step="")
+    code = _cmd_labs(args)
+    assert code == 0
+
+
+def test_cmd_labs_progress():
+    args = _make_args("labs", command="progress", id="lab-intro-ai", step="")
+    code = _cmd_labs(args)
+    assert code == 0
+
+
+def test_cmd_labs_steps():
+    args = _make_args("labs", command="steps", id="lab-intro-ai", step="step-1")
+    code = _cmd_labs(args)
+    assert code == 0
+
+
+def test_cmd_scholarships_list():
+    args = _make_args("scholarships", command="list", id="", name="", proposal="", applicant="")
+    code = _cmd_scholarships(args)
+    assert code == 0
+
+
+def test_cmd_scholarships_apply():
+    args = _make_args("scholarships", command="apply", id="", name="I Scholar", proposal="Need funding", applicant="")
+    code = _cmd_scholarships(args)
+    assert code == 0
+
+
+def test_cmd_scholarships_status():
+    args = _make_args("scholarships", command="status", id="", name="", proposal="", applicant="user-1")
+    code = _cmd_scholarships(args)
+    assert code == 0
+
+
+def test_cmd_scholarships_award():
+    args = _make_args("scholarships", command="award", id="app-1", name="", proposal="", applicant="")
+    code = _cmd_scholarships(args)
+    assert code == 0
+
+
+def test_cmd_conference_info():
+    args = _make_args("conference", command="info")
+    code = _cmd_conference(args)
+    assert code == 0
+
+
+def test_cmd_conference_sessions():
+    args = _make_args("conference", command="sessions", session_title="")
+    code = _cmd_conference(args)
+    assert code == 0
+
+
+def test_cmd_conference_speakers():
+    args = _make_args("conference", command="speakers", speaker="Dr. Smith")
+    code = _cmd_conference(args)
+    assert code == 0
+
+
+def test_cmd_conference_sponsors():
+    args = _make_args("conference", command="sponsors")
+    code = _cmd_conference(args)
+    assert code == 0
+
+
+def test_cmd_conference_cfp():
+    args = _make_args("conference", command="cfp")
+    code = _cmd_conference(args)
+    assert code == 0
+
+
+def test_cmd_conference_schedule():
+    args = _make_args("conference", command="schedule")
+    code = _cmd_conference(args)
     assert code == 0

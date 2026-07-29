@@ -4,9 +4,9 @@ Tests for message formatting.
 
 from pathlib import Path
 
-from src.compiler.core.formatting import MessageFormatter
 from src.compiler.core.diagnostics import Diagnostic, Severity
-from src.compiler.core.source import SourceFile, PositionTracker
+from src.compiler.core.formatting import MessageFormatter
+from src.compiler.core.source import PositionTracker, SourceFile
 
 
 class TestMessageFormatter:

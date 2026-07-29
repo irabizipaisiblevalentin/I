@@ -7,12 +7,12 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from enum import Enum
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Union
+from typing import Any
 
 
 class DependencySource(Enum):
     """Source of a dependency."""
-    
+
     REGISTRY = "registry"
     PATH = "path"
     GIT = "git"
@@ -21,26 +21,26 @@ class DependencySource(Enum):
 @dataclass(frozen=True)
 class Dependency:
     """Dependency specification."""
-    
+
     name: str
     version: str
     source: DependencySource = DependencySource.REGISTRY
-    path: Optional[Path] = None
-    git_url: Optional[str] = None
-    git_rev: Optional[str] = None
-    
+    path: Path | None = None
+    git_url: str | None = None
+    git_rev: str | None = None
+
     @classmethod
-    def parse(cls, name: str, spec: Union[str, Dict[str, Any]]) -> Dependency:
+    def parse(cls, name: str, spec: str | dict[str, Any]) -> Dependency:
         """
         Parse dependency from string or dictionary.
-        
+
         Args:
             name: Dependency name
             spec: Version string or dictionary specification
-            
+
         Returns:
             Parsed dependency
-            
+
         Raises:
             ValueError: If specification is invalid
         """
@@ -50,14 +50,14 @@ class Dependency:
                 version=spec,
                 source=DependencySource.REGISTRY,
             )
-        
+
         if isinstance(spec, dict):
             version = spec.get("version", "*")
             source = DependencySource.REGISTRY
             path = None
             git_url = None
             git_rev = None
-            
+
             if "path" in spec:
                 source = DependencySource.PATH
                 path = Path(spec["path"])
@@ -65,7 +65,7 @@ class Dependency:
                 source = DependencySource.GIT
                 git_url = spec["git"]
                 git_rev = spec.get("rev")
-            
+
             return cls(
                 name=name,
                 version=version,
@@ -74,20 +74,20 @@ class Dependency:
                 git_url=git_url,
                 git_rev=git_rev,
             )
-        
+
         raise ValueError(f"Invalid dependency specification for {name}")
 
 
 @dataclass(frozen=True)
 class WorkspaceConfig:
     """Workspace configuration."""
-    
-    members: List[str] = field(default_factory=list)
-    exclude: List[str] = field(default_factory=list)
+
+    members: list[str] = field(default_factory=list)
+    exclude: list[str] = field(default_factory=list)
     resolver: str = "default"
-    
+
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> WorkspaceConfig:
+    def from_dict(cls, data: dict[str, Any]) -> WorkspaceConfig:
         """Create from dictionary."""
         return cls(
             members=data.get("members", []),
@@ -99,15 +99,15 @@ class WorkspaceConfig:
 @dataclass(frozen=True)
 class ProfileConfig:
     """Build profile configuration."""
-    
+
     opt_level: int = 0
     debug: bool = False
     lto: bool = False
-    codegen_units: Optional[int] = None
+    codegen_units: int | None = None
     panic: str = "unwind"
-    
+
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> ProfileConfig:
+    def from_dict(cls, data: dict[str, Any]) -> ProfileConfig:
         """Create from dictionary."""
         return cls(
             opt_level=data.get("opt-level", 0),
@@ -122,76 +122,76 @@ class ProfileConfig:
 class Config:
     """
     Immutable workspace configuration.
-    
+
     This is the main configuration structure for an I project.
     It is immutable after creation to ensure consistency.
     """
-    
+
     # Package information
     name: str
     version: str
     edition: str = "1.0"
-    authors: List[str] = field(default_factory=list)
+    authors: list[str] = field(default_factory=list)
     description: str = ""
     license: str = "MIT"
-    repository: Optional[str] = None
-    keywords: List[str] = field(default_factory=list)
-    categories: List[str] = field(default_factory=list)
-    
+    repository: str | None = None
+    keywords: list[str] = field(default_factory=list)
+    categories: list[str] = field(default_factory=list)
+
     # Dependencies
-    dependencies: Dict[str, Dependency] = field(default_factory=dict)
-    dev_dependencies: Dict[str, Dependency] = field(default_factory=dict)
-    build_dependencies: Dict[str, Dependency] = field(default_factory=dict)
-    
+    dependencies: dict[str, Dependency] = field(default_factory=dict)
+    dev_dependencies: dict[str, Dependency] = field(default_factory=dict)
+    build_dependencies: dict[str, Dependency] = field(default_factory=dict)
+
     # Workspace
-    workspace: Optional[WorkspaceConfig] = None
-    
+    workspace: WorkspaceConfig | None = None
+
     # Profiles
     profile_dev: ProfileConfig = field(default_factory=ProfileConfig)
     profile_release: ProfileConfig = field(default_factory=lambda: ProfileConfig(opt_level=3, lto=True))
-    
+
     # Paths (relative to workspace root)
     src_dir: str = "src"
     test_dir: str = "tests"
     example_dir: str = "examples"
     bench_dir: str = "benches"
     doc_dir: str = "docs"
-    
+
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> Config:
+    def from_dict(cls, data: dict[str, Any]) -> Config:
         """
         Create config from dictionary.
-        
+
         Args:
             data: Configuration dictionary
-            
+
         Returns:
             Configuration instance
         """
         package = data.get("package", {})
-        
+
         # Parse dependencies
         dependencies = {}
         for name, spec in data.get("dependencies", {}).items():
             dependencies[name] = Dependency.parse(name, spec)
-        
+
         dev_dependencies = {}
         for name, spec in data.get("dev-dependencies", {}).items():
             dev_dependencies[name] = Dependency.parse(name, spec)
-        
+
         build_dependencies = {}
         for name, spec in data.get("build-dependencies", {}).items():
             build_dependencies[name] = Dependency.parse(name, spec)
-        
+
         # Parse workspace
         workspace = None
         if "workspace" in data:
             workspace = WorkspaceConfig.from_dict(data["workspace"])
-        
+
         # Parse profiles
         profile_dev = ProfileConfig.from_dict(data.get("profile", {}).get("dev", {}))
         profile_release = ProfileConfig.from_dict(data.get("profile", {}).get("release", {}))
-        
+
         return cls(
             name=package.get("name", ""),
             version=package.get("version", "0.0.0"),
@@ -209,15 +209,15 @@ class Config:
             profile_dev=profile_dev,
             profile_release=profile_release,
         )
-    
-    def to_dict(self) -> Dict[str, Any]:
+
+    def to_dict(self) -> dict[str, Any]:
         """
         Convert config to dictionary.
-        
+
         Returns:
             Configuration dictionary
         """
-        result: Dict[str, Any] = {
+        result: dict[str, Any] = {
             "package": {
                 "name": self.name,
                 "version": self.version,
@@ -227,47 +227,47 @@ class Config:
                 "license": self.license,
             }
         }
-        
+
         if self.repository:
             result["package"]["repository"] = self.repository
-        
+
         if self.keywords:
             result["package"]["keywords"] = self.keywords
-        
+
         if self.categories:
             result["package"]["categories"] = self.categories
-        
+
         # Dependencies
         if self.dependencies:
             result["dependencies"] = {
                 name: dep.version if dep.source == DependencySource.REGISTRY else {"path": str(dep.path)}
                 for name, dep in self.dependencies.items()
             }
-        
+
         if self.dev_dependencies:
             result["dev-dependencies"] = {
                 name: dep.version if dep.source == DependencySource.REGISTRY else {"path": str(dep.path)}
                 for name, dep in self.dev_dependencies.items()
             }
-        
+
         if self.build_dependencies:
             result["build-dependencies"] = {
                 name: dep.version if dep.source == DependencySource.REGISTRY else {"path": str(dep.path)}
                 for name, dep in self.build_dependencies.items()
             }
-        
+
         # Workspace
         if self.workspace:
             result["workspace"] = {
                 "members": self.workspace.members,
             }
-        
+
         return result
-    
-    def get_all_dependencies(self) -> Dict[str, Dependency]:
+
+    def get_all_dependencies(self) -> dict[str, Dependency]:
         """
         Get all dependencies (main + dev + build).
-        
+
         Returns:
             Combined dependencies dictionary
         """

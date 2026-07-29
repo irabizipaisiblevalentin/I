@@ -5,16 +5,15 @@ Path utilities.
 from __future__ import annotations
 
 from pathlib import Path, PurePosixPath
-from typing import Optional
 
 
 def normalize_path(path: Path) -> Path:
     """
     Normalize a path.
-    
+
     Args:
         path: Path to normalize
-        
+
     Returns:
         Normalized path
     """
@@ -24,11 +23,11 @@ def normalize_path(path: Path) -> Path:
 def relative_to(path: Path, base: Path) -> str:
     """
     Get relative path as string.
-    
+
     Args:
         path: Target path
         base: Base path
-        
+
     Returns:
         Relative path string (using forward slashes)
     """
@@ -42,10 +41,10 @@ def relative_to(path: Path, base: Path) -> str:
 def ensure_dir(path: Path) -> Path:
     """
     Ensure directory exists.
-    
+
     Args:
         path: Directory path
-        
+
     Returns:
         The directory path
     """
@@ -53,26 +52,26 @@ def ensure_dir(path: Path) -> Path:
     return path
 
 
-def find_project_root(start: Path) -> Optional[Path]:
+def find_project_root(start: Path) -> Path | None:
     """
     Find project root by looking for marker files.
-    
+
     Args:
         start: Starting directory
-        
+
     Returns:
         Project root or None
     """
     markers = ["ilang.toml", "ilang.json", ".git", "Cargo.toml"]
     current = start.resolve()
-    
+
     while True:
         for marker in markers:
             if (current / marker).exists():
                 return current
-        
+
         parent = current.parent
         if parent == current:
             return None
-        
+
         current = parent

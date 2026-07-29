@@ -6,7 +6,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from enum import Enum, auto
-from typing import Optional, TYPE_CHECKING
+from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from ..source.position import Span
@@ -25,15 +25,15 @@ class HintKind(Enum):
 class Hint:
     """
     Diagnostic hint.
-    
+
     Provides actionable suggestions for fixing issues.
     """
-    
+
     kind: HintKind
     message: str
-    replacement: Optional[str] = None
-    span: Optional[Span] = None
-    
+    replacement: str | None = None
+    span: Span | None = None
+
     def __str__(self) -> str:
         prefix = {
             HintKind.SUGGESTION: "suggestion",
@@ -42,5 +42,5 @@ class Hint:
             HintKind.IMPORT_SUGGESTION: "import",
             HintKind.FIX_SUGGESTION: "fix",
         }.get(self.kind, "hint")
-        
+
         return f"{prefix}: {self.message}"

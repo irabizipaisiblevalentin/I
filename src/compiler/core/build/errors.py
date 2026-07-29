@@ -5,16 +5,15 @@ Build-specific errors.
 from __future__ import annotations
 
 from pathlib import Path
-from typing import List, Optional
 
 
 class BuildError(Exception):
     """Base class for build errors."""
-    
+
     def __init__(self, message: str, code: str = "B000"):
         """
         Initialize build error.
-        
+
         Args:
             message: Error message
             code: Error code
@@ -25,17 +24,17 @@ class BuildError(Exception):
 
 class TaskError(BuildError):
     """Build task execution error."""
-    
+
     def __init__(
         self,
         message: str,
         task_name: str,
         task_type: str,
-        cause: Optional[Exception] = None,
+        cause: Exception | None = None,
     ):
         """
         Initialize task error.
-        
+
         Args:
             message: Error message
             task_name: Name of failed task
@@ -45,21 +44,21 @@ class TaskError(BuildError):
         self.task_name = task_name
         self.task_type = task_type
         self.cause = cause
-        
+
         full_message = f"[{task_type}] Task '{task_name}' failed: {message}"
         if cause:
             full_message += f"\nCause: {cause}"
-        
+
         super().__init__(full_message, "B001")
 
 
 class CacheError(BuildError):
     """Build cache error."""
-    
-    def __init__(self, message: str, cache_path: Optional[Path] = None):
+
+    def __init__(self, message: str, cache_path: Path | None = None):
         """
         Initialize cache error.
-        
+
         Args:
             message: Error message
             cache_path: Optional path to cache file
@@ -73,51 +72,51 @@ class CacheError(BuildError):
 
 class BuildTimeoutError(BuildError):
     """Build timeout exceeded."""
-    
-    def __init__(self, timeout: float, task_name: Optional[str] = None):
+
+    def __init__(self, timeout: float, task_name: str | None = None):
         """
         Initialize timeout error.
-        
+
         Args:
             timeout: Timeout in seconds
             task_name: Optional task that timed out
         """
         self.timeout = timeout
         self.task_name = task_name
-        
+
         message = f"Build timed out after {timeout}s"
         if task_name:
             message += f" (task: {task_name})"
-        
+
         super().__init__(message, "B006")
 
 
 class BuildMemoryError(BuildError):
     """Build out of memory."""
-    
-    def __init__(self, limit: Optional[int] = None):
+
+    def __init__(self, limit: int | None = None):
         """
         Initialize memory error.
-        
+
         Args:
             limit: Memory limit in bytes
         """
         self.limit = limit
-        
+
         message = "Build ran out of memory"
         if limit:
             message += f" (limit: {limit / 1024 / 1024:.1f}MB)"
-        
+
         super().__init__(message, "B007")
 
 
 class CircularDependencyError(BuildError):
     """Circular dependency detected."""
-    
-    def __init__(self, cycle: List[str]):
+
+    def __init__(self, cycle: list[str]):
         """
         Initialize circular dependency error.
-        
+
         Args:
             cycle: List of tasks forming the cycle
         """

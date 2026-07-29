@@ -2,7 +2,7 @@
 Tests for memory utilities.
 """
 
-from src.compiler.core.memory import Arena, MemoryTracker, AllocationStats
+from src.compiler.core.memory import AllocationStats, Arena, MemoryTracker
 
 
 class TestAllocationStats:

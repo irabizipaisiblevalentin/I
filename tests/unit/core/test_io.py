@@ -5,7 +5,7 @@ Tests for IO utilities.
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
-from src.compiler.core.io import FileManager, normalize_path, relative_to, ensure_dir
+from src.compiler.core.io import FileManager, ensure_dir, normalize_path, relative_to
 from src.compiler.core.io.paths import find_project_root
 
 

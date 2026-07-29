@@ -206,13 +206,14 @@ def _cmd_docs(args: argparse.Namespace) -> int:
     elif cmd == "books":
         book_name = getattr(args, "book", "") or args.query
         if book_name:
-            book = docs.get_book(book_name)
+            book = docs.get_textbook(book_name)
             if book:
-                print(json.dumps({"title": book["title"], "chapters": len(book.get("chapters", [])), "exercises": len(book.get("exercises", []))}, indent=2))
+                print(json.dumps({"title": book.get("title"), "chapters": len(book.get("chapters", [])), "exercises": len(book.get("exercises", []))}, indent=2))
             else:
                 print(json.dumps({"error": "Book not found"}))
         else:
-            print(json.dumps({"message": "Use --book to specify a book title"}))
+            textbooks = docs.list_textbooks()
+            print(json.dumps([t.get("title") for t in textbooks], indent=2))
     return 0
 
 
@@ -462,21 +463,23 @@ def _cmd_package(args: argparse.Namespace) -> int:
 
 
 def _cmd_foundation(args: argparse.Namespace) -> int:
+    from .ishyinguro import FOUNDATION_CHARTER
     fnd = Foundation()
     cmd = args.command
     if cmd == "info":
-        print(json.dumps({"name": "I Foundation", "mission": fnd.FOUNDATION_CHARTER["mission"], "values": fnd.FOUNDATION_CHARTER["values"]}, indent=2))
+        charter = fnd.get_charter()
+        print(json.dumps({"name": charter.get("name"), "mission": charter.get("mission"), "values": charter.get("values")}, indent=2))
     elif cmd == "members":
         members = fnd.list_members()
-        print(json.dumps(members, indent=2))
+        print(json.dumps([{"id": m.id, "name": m.name, "role": m.role} for m in members], indent=2))
     elif cmd == "board":
         board = fnd.get_board()
-        print(json.dumps([{"name": m.get("name", ""), "role": m.get("role", "")} for m in board], indent=2))
+        print(json.dumps([{"id": m.id, "name": m.name, "role": m.role} for m in board], indent=2))
     elif cmd == "policies":
-        policies = fnd.get_policies()
+        policies = fnd.list_policies()
         print(json.dumps(policies, indent=2))
     elif cmd == "charter":
-        print(json.dumps(fnd.FOUNDATION_CHARTER, indent=2))
+        print(json.dumps(fnd.get_charter(), indent=2))
     return 0
 
 
@@ -484,28 +487,32 @@ def _cmd_labs(args: argparse.Namespace) -> int:
     labs = Labs()
     cmd = args.command
     if cmd == "list":
-        templates = labs.list_lab_templates()
-        print(json.dumps([{"id": t["id"], "title": t["title"], "domain": t.get("domain", "")} for t in templates], indent=2))
+        all_labs = labs.list_labs()
+        print(json.dumps([{"id": t.id, "title": t.title, "domain": t.domain.value if t.domain else ""} for t in all_labs], indent=2))
     elif cmd == "start":
         lab_id = getattr(args, "id", "")
         if lab_id:
-            instance = labs.start_lab(lab_id)
-            print(json.dumps({"status": "running", "lab_id": lab_id, "instance_id": instance.get("instance_id", "")}, indent=2))
+            instance = labs.start_lab("current-user", lab_id)
+            print(json.dumps({"status": "running", "lab_id": lab_id, "instance_id": instance.get("instance_id", "") if instance else ""}, indent=2))
         else:
             print(json.dumps({"error": "Missing lab ID"}))
     elif cmd == "progress":
         lab_id = getattr(args, "id", "")
         if lab_id:
-            progress = labs.get_lab_progress(lab_id)
+            progress = labs.get_lab_progress("current-user", lab_id)
             print(json.dumps(progress, indent=2))
     elif cmd == "steps":
         step = getattr(args, "step", "")
         lab_id = getattr(args, "id", "")
         if step and lab_id:
-            valid = labs.validate_step(lab_id, step)
-            print(json.dumps({"lab_id": lab_id, "step": step, "valid": valid}))
+            try:
+                step_idx = int(step)
+            except ValueError:
+                step_idx = 0
+            valid = labs.validate_step(lab_id, step_idx, "")
+            print(json.dumps({"lab_id": lab_id, "step": step, "valid": valid.get("correct", False) if isinstance(valid, dict) else valid}))
         else:
-            print(json.dumps({"message": "Use --step and id to validate a step"}))
+            print(json.dumps({"message": "Use --step (int) and id to validate a step"}))
     return 0
 
 
@@ -514,13 +521,13 @@ def _cmd_scholarships(args: argparse.Namespace) -> int:
     cmd = args.command
     if cmd == "list":
         all_sch = sch.list_scholarships()
-        print(json.dumps(all_sch, indent=2))
+        print(json.dumps([{"id": s.id, "name": s.name, "status": s.status.value if s.status else ""} for s in all_sch], indent=2))
     elif cmd == "apply":
         name = getattr(args, "name", "") or getattr(args, "id", "")
         proposal = getattr(args, "proposal", "")
         if name and proposal:
-            app = sch.apply(name, "current-user", proposal)
-            print(json.dumps({"status": "submitted", "application_id": app.get("id", "")}, indent=2))
+            success = sch.apply(name, "current-user", proposal)
+            print(json.dumps({"status": "submitted" if success else "failed"}, indent=2))
         else:
             print(json.dumps({"error": "Need --name and --proposal"}))
     elif cmd == "status":
@@ -530,7 +537,7 @@ def _cmd_scholarships(args: argparse.Namespace) -> int:
     elif cmd == "award":
         app_id = getattr(args, "id", "")
         if app_id:
-            result = sch.award_scholarship(app_id)
+            result = sch.award_scholarship("default-scholarship", app_id)
             print(json.dumps({"status": "awarded", "result": result}, indent=2))
     return 0
 
@@ -538,33 +545,38 @@ def _cmd_scholarships(args: argparse.Namespace) -> int:
 def _cmd_conference(args: argparse.Namespace) -> int:
     conf = GlobalConference()
     cmd = args.command
+    conf_id = "iglobal-conf-2026"
     if cmd == "info":
-        print(json.dumps({"name": "I Global Conference", "status": "active", "cfp_open": True}, indent=2))
+        conference = conf.get_conference(conf_id)
+        if conference:
+            print(json.dumps({"id": conference.id, "name": conference.name, "year": conference.year}, indent=2))
+        else:
+            print(json.dumps({"name": "I Global Conference", "status": "active"}, indent=2))
     elif cmd == "sessions":
         title = getattr(args, "session_title", "")
         if title:
-            sessions = conf.search_sessions(title)
-            print(json.dumps(sessions, indent=2))
+            all_sessions = conf.get_sessions(conf_id)
+            filtered = [s for s in all_sessions if title.lower() in s.get("title", "").lower()]
+            print(json.dumps(filtered, indent=2))
         else:
-            schedule = conf.get_conference_schedule()
+            schedule = conf.get_conference_schedule(conf_id)
             print(json.dumps(schedule, indent=2))
     elif cmd == "speakers":
-        speaker = getattr(args, "speaker", "")
-        if speaker:
-            sessions = conf.list_speaker_sessions(speaker)
-            print(json.dumps(sessions, indent=2))
+        speakers = conf.get_speakers(conf_id)
+        speaker_filter = getattr(args, "speaker", "")
+        if speaker_filter:
+            filtered = [s for s in speakers if speaker_filter.lower() in s.get("name", "").lower()]
+            print(json.dumps(filtered, indent=2))
         else:
-            print(json.dumps({"message": "Use --speaker to list sessions by speaker"}))
+            print(json.dumps(speakers, indent=2))
     elif cmd == "sponsors":
-        sponsors = conf.list_sponsors()
+        sponsors = conf.get_sponsors(conf_id)
         print(json.dumps(sponsors, indent=2))
     elif cmd == "cfp":
-        if conf.is_cfp_open():
-            print(json.dumps({"cfp": "open", "message": "Submit proposals with --session-title"}))
-        else:
-            print(json.dumps({"cfp": "closed"}))
+        submissions = conf.get_cfp_submissions(conf_id)
+        print(json.dumps({"cfp": "open" if submissions is not None else "unknown", "submissions_count": len(submissions if submissions else [])}))
     elif cmd == "schedule":
-        schedule = conf.get_conference_schedule()
+        schedule = conf.get_conference_schedule(conf_id)
         print(json.dumps(schedule, indent=2))
     return 0
 

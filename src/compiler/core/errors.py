@@ -7,25 +7,25 @@ All compiler-specific exceptions inherit from a common base.
 
 from __future__ import annotations
 
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 
 class IError(Exception):
     """
     Base exception for all I compiler errors.
-    
+
     All exceptions raised within the compiler should inherit from this class.
     """
-    
+
     def __init__(
         self,
         message: str,
         code: str = "I000",
-        details: Optional[Dict[str, Any]] = None,
+        details: dict[str, Any] | None = None,
     ) -> None:
         """
         Initialize error.
-        
+
         Args:
             message: Human-readable error message
             code: Error code string
@@ -39,20 +39,20 @@ class IError(Exception):
 class CompilerError(IError):
     """
     Base compiler error.
-    
+
     Raised when compilation fails at any stage.
     """
-    
+
     def __init__(
         self,
         message: str,
         code: str = "C000",
-        stage: Optional[str] = None,
-        details: Optional[Dict[str, Any]] = None,
+        stage: str | None = None,
+        details: dict[str, Any] | None = None,
     ) -> None:
         """
         Initialize compiler error.
-        
+
         Args:
             message: Error message
             code: Error code
@@ -66,20 +66,20 @@ class CompilerError(IError):
 class ConfigError(IError):
     """
     Configuration error.
-    
+
     Raised when compiler configuration is invalid or missing.
     """
-    
+
     def __init__(
         self,
         message: str,
-        path: Optional[str] = None,
-        field: Optional[str] = None,
-        details: Optional[Dict[str, Any]] = None,
+        path: str | None = None,
+        field: str | None = None,
+        details: dict[str, Any] | None = None,
     ) -> None:
         """
         Initialize config error.
-        
+
         Args:
             message: Error message
             path: Path to config file
@@ -94,20 +94,20 @@ class ConfigError(IError):
 class FileIOError(IError):
     """
     File input/output error.
-    
+
     Raised when file operations fail.
     """
-    
+
     def __init__(
         self,
         message: str,
-        path: Optional[str] = None,
-        operation: Optional[str] = None,
-        details: Optional[Dict[str, Any]] = None,
+        path: str | None = None,
+        operation: str | None = None,
+        details: dict[str, Any] | None = None,
     ) -> None:
         """
         Initialize file IO error.
-        
+
         Args:
             message: Error message
             path: File path
@@ -122,20 +122,20 @@ class FileIOError(IError):
 class InternalError(IError):
     """
     Internal compiler error.
-    
+
     Raised when the compiler encounters an unexpected internal state.
     This indicates a bug in the compiler itself.
     """
-    
+
     def __init__(
         self,
         message: str,
-        component: Optional[str] = None,
-        details: Optional[Dict[str, Any]] = None,
+        component: str | None = None,
+        details: dict[str, Any] | None = None,
     ) -> None:
         """
         Initialize internal error.
-        
+
         Args:
             message: Error message
             component: Compiler component
@@ -148,20 +148,20 @@ class InternalError(IError):
 class ValidationError(IError):
     """
     Validation error.
-    
+
     Raised when input validation fails.
     """
-    
+
     def __init__(
         self,
         message: str,
-        field: Optional[str] = None,
-        value: Optional[Any] = None,
-        details: Optional[Dict[str, Any]] = None,
+        field: str | None = None,
+        value: Any | None = None,
+        details: dict[str, Any] | None = None,
     ) -> None:
         """
         Initialize validation error.
-        
+
         Args:
             message: Error message
             field: Field being validated
@@ -173,22 +173,22 @@ class ValidationError(IError):
         self.value = value
 
 
-class Panic(IError):
+class PanicError(IError):
     """
     Fatal compiler error.
-    
+
     Raised when the compiler cannot continue execution safely.
     Represents an unrecoverable error.
     """
-    
+
     def __init__(
         self,
         message: str,
-        context: Optional[Dict[str, Any]] = None,
+        context: dict[str, Any] | None = None,
     ) -> None:
         """
         Initialize panic.
-        
+
         Args:
             message: Error message
             context: Optional context information
@@ -203,5 +203,5 @@ __all__ = [
     "FileIOError",
     "InternalError",
     "ValidationError",
-    "Panic",
+    "PanicError",
 ]

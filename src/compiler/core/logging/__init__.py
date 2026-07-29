@@ -4,10 +4,10 @@ Logging Framework
 Provides structured logging for the I compiler.
 """
 
-from .logger import Logger, get_logger
+from .formatter import ColoredFormatter, LogFormatter, PlainFormatter
+from .handler import ConsoleHandler, FileHandler, LogHandler
 from .level import LogLevel
-from .handler import LogHandler, ConsoleHandler, FileHandler
-from .formatter import LogFormatter, PlainFormatter, ColoredFormatter
+from .logger import Logger, get_logger
 from .record import LogRecord
 
 __all__ = [

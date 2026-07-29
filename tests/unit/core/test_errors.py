@@ -2,16 +2,15 @@
 Tests for the unified exception hierarchy.
 """
 
-import pytest
 
 from src.compiler.core.errors import (
-    IError,
     CompilerError,
     ConfigError,
     FileIOError,
+    IError,
     InternalError,
+    PanicError,
     ValidationError,
-    Panic,
 )
 
 
@@ -85,11 +84,11 @@ class TestValidationError:
         assert error.value == -1
 
 
-class TestPanic:
-    """Tests for Panic."""
+class TestPanicError:
+    """Tests for PanicError."""
 
     def test_creation(self):
-        error = Panic("fatal error", context={"phase": "codegen"})
+        error = PanicError("fatal error", context={"phase": "codegen"})
         assert error.code == "P000"
         assert error.details == {"phase": "codegen"}
 
@@ -103,7 +102,7 @@ class TestInheritance:
         assert isinstance(FileIOError("x"), IError)
         assert isinstance(InternalError("x"), IError)
         assert isinstance(ValidationError("x"), IError)
-        assert isinstance(Panic("x"), IError)
+        assert isinstance(PanicError("x"), IError)
 
     def test_compilererror_is_exception(self):
         assert issubclass(CompilerError, Exception)

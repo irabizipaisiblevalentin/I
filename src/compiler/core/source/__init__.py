@@ -5,7 +5,7 @@ Source file abstraction and position tracking.
 """
 
 from .file import SourceFile
-from .position import Position, Span, PositionTracker
+from .position import Position, PositionTracker, Span
 
 __all__ = [
     "SourceFile",

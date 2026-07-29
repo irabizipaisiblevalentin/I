@@ -5,23 +5,23 @@ Tests for Result and Option types.
 import pytest
 
 from src.compiler.core.result import (
-    Ok,
     Err,
-    Some,
     Nothing,
-    is_ok,
+    Ok,
+    Some,
+    and_then,
     is_err,
+    is_nothing,
+    is_ok,
+    is_some,
+    map,
+    map_err,
+    or_else,
+    partition,
+    try_all,
     unwrap,
     unwrap_or,
     unwrap_or_else,
-    map,
-    map_err,
-    and_then,
-    or_else,
-    try_all,
-    partition,
-    is_some,
-    is_nothing,
 )
 
 

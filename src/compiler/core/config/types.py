@@ -6,8 +6,8 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, Dict, List, Optional
 from pathlib import Path
+from typing import Any
 
 
 class OptimizationLevel(Enum):
@@ -39,9 +39,9 @@ class FeatureFlags:
     experimental_coroutines: bool = False
     experimental_pattern_matching: bool = True
     unsafe_mode: bool = False
-    
+
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> FeatureFlags:
+    def from_dict(cls, data: dict[str, Any]) -> FeatureFlags:
         """Create from dictionary."""
         return cls(
             experimental_generics=data.get("experimental_generics", False),
@@ -58,9 +58,9 @@ class BuildConfig:
     debug_info: DebugLevel = DebugLevel.LINE_NUMBERS
     output_format: OutputFormat = OutputFormat.BYTECODE
     target: str = "default"
-    
+
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> BuildConfig:
+    def from_dict(cls, data: dict[str, Any]) -> BuildConfig:
         """Create from dictionary."""
         return cls(
             optimization=OptimizationLevel(data.get("optimization", "standard")),
@@ -75,16 +75,16 @@ class CompilerConfig:
     """Complete compiler configuration."""
     name: str = "ilang"
     version: str = "0.1.0"
-    root: Optional[Path] = None
-    source_dirs: List[str] = field(default_factory=lambda: ["src"])
+    root: Path | None = None
+    source_dirs: list[str] = field(default_factory=lambda: ["src"])
     output_dir: str = "build"
-    stdlib_path: Optional[str] = None
+    stdlib_path: str | None = None
     build: BuildConfig = field(default_factory=BuildConfig)
     features: FeatureFlags = field(default_factory=FeatureFlags)
-    extra: Dict[str, Any] = field(default_factory=dict)
-    
+    extra: dict[str, Any] = field(default_factory=dict)
+
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> CompilerConfig:
+    def from_dict(cls, data: dict[str, Any]) -> CompilerConfig:
         """Create from dictionary."""
         return cls(
             name=data.get("name", "ilang"),

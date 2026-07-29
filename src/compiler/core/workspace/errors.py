@@ -5,16 +5,15 @@ Workspace-specific errors.
 from __future__ import annotations
 
 from pathlib import Path
-from typing import List, Optional
 
 
 class WorkspaceError(Exception):
     """Base class for workspace errors."""
-    
-    def __init__(self, message: str, path: Optional[Path] = None):
+
+    def __init__(self, message: str, path: Path | None = None):
         """
         Initialize workspace error.
-        
+
         Args:
             message: Error message
             path: Optional path associated with error
@@ -25,11 +24,11 @@ class WorkspaceError(Exception):
 
 class ConfigNotFoundError(WorkspaceError):
     """Configuration file not found."""
-    
-    def __init__(self, path: Path, search_paths: Optional[List[Path]] = None):
+
+    def __init__(self, path: Path, search_paths: list[Path] | None = None):
         """
         Initialize config not found error.
-        
+
         Args:
             path: Path that was searched
             search_paths: All paths that were searched
@@ -43,11 +42,11 @@ class ConfigNotFoundError(WorkspaceError):
 
 class ConfigParseError(WorkspaceError):
     """Configuration file could not be parsed."""
-    
-    def __init__(self, path: Path, reason: str, line: Optional[int] = None, column: Optional[int] = None):
+
+    def __init__(self, path: Path, reason: str, line: int | None = None, column: int | None = None):
         """
         Initialize config parse error.
-        
+
         Args:
             path: Path to configuration file
             reason: Reason for parse failure
@@ -57,24 +56,24 @@ class ConfigParseError(WorkspaceError):
         self.reason = reason
         self.line = line
         self.column = column
-        
+
         message = f"Failed to parse configuration: {path}"
         if line is not None:
             message += f":{line}"
             if column is not None:
                 message += f":{column}"
         message += f"\n{reason}"
-        
+
         super().__init__(message, path)
 
 
 class ConfigValidationError(WorkspaceError):
     """Configuration validation failed."""
-    
-    def __init__(self, path: Path, errors: List[str]):
+
+    def __init__(self, path: Path, errors: list[str]):
         """
         Initialize config validation error.
-        
+
         Args:
             path: Path to configuration file
             errors: List of validation errors
@@ -87,11 +86,11 @@ class ConfigValidationError(WorkspaceError):
 
 class WorkspaceMemberError(WorkspaceError):
     """Workspace member error."""
-    
-    def __init__(self, message: str, member_path: Optional[Path] = None):
+
+    def __init__(self, message: str, member_path: Path | None = None):
         """
         Initialize workspace member error.
-        
+
         Args:
             message: Error message
             member_path: Optional path to workspace member

@@ -18,7 +18,6 @@ class TestTimer:
         timer = Timer()
         timer.start()
         timer.stop()
-        elapsed_before = timer.elapsed
         timer.reset()
         assert timer.elapsed == 0.0
 

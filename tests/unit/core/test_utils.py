@@ -2,23 +2,22 @@
 Tests for core utility functions.
 """
 
-import pytest
 
 from src.compiler.core.utils import (
-    clamp,
-    group_by,
-    unique,
-    flatten,
+    camel_to_snake,
     chunks,
+    clamp,
     find,
     find_index,
-    partition,
-    merge_dicts,
-    camel_to_snake,
-    snake_to_camel,
-    pluralize,
+    flatten,
     format_bytes,
     format_duration,
+    group_by,
+    merge_dicts,
+    partition,
+    pluralize,
+    snake_to_camel,
+    unique,
 )
 
 

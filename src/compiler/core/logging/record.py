@@ -6,7 +6,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Any, Dict, Optional
+from typing import Any
 
 from .level import LogLevel
 
@@ -15,19 +15,19 @@ from .level import LogLevel
 class LogRecord:
     """
     Single log record.
-    
+
     Represents a single log event with all associated metadata.
     """
-    
+
     level: LogLevel
     message: str
     logger_name: str
     timestamp: datetime = field(default_factory=datetime.now)
-    module: Optional[str] = None
-    function: Optional[str] = None
-    line: Optional[int] = None
-    extra: Dict[str, Any] = field(default_factory=dict)
-    
+    module: str | None = None
+    function: str | None = None
+    line: int | None = None
+    extra: dict[str, Any] = field(default_factory=dict)
+
     def __str__(self) -> str:
         """String representation."""
         parts = [
