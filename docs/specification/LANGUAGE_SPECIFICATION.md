@@ -1,5 +1,16 @@
 # I Programming Language Specification
 
+> **Version 1.0 — LANGUAGE FREEZE**
+>
+> This specification is frozen for the Version 1.0 release.
+> No new language features, syntax changes, or semantic modifications will be accepted.
+>
+> **Freeze Date**: July 30, 2026
+> **Expected Release**: Following self-hosting milestone completion
+>
+> To propose changes after freeze, file an RFC per the process in `docs/evolution/rfc-system.md`.
+> Changes will be considered for Version 2.0 only.
+
 This document specifies the syntax and semantics of the I programming language.
 
 ## Table of Contents
