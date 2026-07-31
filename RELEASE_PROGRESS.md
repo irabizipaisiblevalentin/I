@@ -1,10 +1,11 @@
 # Release Progress — I Language v1.0
 
 **Owner:** Release Stabilization Team
-**Status:** Stabilization complete — **awaiting approval before RC1** (M11)
+**Status:** Stabilization approved — **RC1 packaged, verification complete** (M11 → M12)
 **Date:** 2026-07-31
 
-> Live tracker. Freeze point reached: **Stop for approval before RC1.**
+> Live tracker. RC1 artifacts built and verified; launch pending final release
+> upload steps (tag, GitHub Release, PyPI) which require the configured remotes.
 
 ---
 
@@ -29,7 +30,9 @@ the printed builtins already specified in `LANGUAGE_SPECIFICATION.md`.
 | M8 | Security hardening + validation report | ✅ Done |
 | M9 | Full regression suite green (4107 passed, 1 skipped) | ✅ Done |
 | M10 | v1.0 metadata + five release reports + Stabilization Report | ✅ Done |
-| M11 | **STOP — await approval before RC1** | 🟡 Awaiting approval |
+| M11 | **STOP — await approval before RC1** | ✅ Approved 2026-07-31 |
+| M12 | RC1 packaged (sdist + wheel) + end-user install/run verification | ✅ Done |
+| M13 | Launch-day uploads (tag, GitHub Release, PyPI) | ⏳ Pending — needs remote/auth
 
 ## Blocker Triage (2026-07-31)
 
@@ -68,6 +71,15 @@ python -m pip install --target %TEMP%\i_install dist\i_lang-1.0.0-*.whl
 # run
 python -m compiler.compiler -r examples/hello.i
 ```
+
+## RC1 Verification Record (2026-07-31)
+
+- **Full suite:** 4107 passed, 1 skipped (Python 3.14, Windows).
+- **Coverage (compiler + vm):** measured via `pytest --cov` = **53%** (32101 stmts, 15123 missed). The 90% target in RELEASE_PROCESS.md is **not met**; recorded as a known v1.0 gap and tracked for 1.1 (coverage expansion), see RELEASE_READINESS_REPORT.md §3.
+- **Artifacts:** `dist/i_lang-1.0.0.tar.gz` (867 KB) + `dist/i_lang-1.0.0-py3-none-any.whl` (1.1 MB) built with `python -m build`.
+- **Wheel contents:** 15 packages, `stdlib/urubuga.i`, `compiler/py.typed`, `vm/py.typed`, console entry point.
+- **End-user path (fresh venv):** `pip install` wheel → `i --version` (v1.0.0) → `i examples/hello.i -r` (`Muraho, Isi!`) → `fibonacci.i`, `variables.i`, `conditionals.i`, `loops.i` all run → `isoko new demo` creates a runnable project (`Hello, World!`).
+- **Repo hygiene:** 760 tracked `__pycache__`/`.pyc` files plus `test.wal`, `.istudio-workspace`, `logs/audit.jsonl` untracked; `.gitignore` extended.
 
 ## Risk Register
 
