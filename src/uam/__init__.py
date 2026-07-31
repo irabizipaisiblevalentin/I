@@ -11,7 +11,7 @@ import os
 import sys
 from typing import Any, Dict, Optional
 
-__version__ = "0.1.0"
+__version__ = "1.0.0"
 
 
 class PlatformTarget(enum.Enum):

@@ -12,7 +12,7 @@ from vm.vm_objects import (
     VMClosure, VMException, VMIterator, VMList, VMMap, VMObject,
     VMSet, VMString, VMStruct, VMTuple,
 )
-from compiler.codegen.bytecode import OpCode
+from vm.vm_bytecode import IVMOpcode
 
 
 class VMRuntimeError(RuntimeError):
@@ -220,183 +220,189 @@ class VMExecutor:
 
             instruction = code[frame.ip]
             opcode = instruction.opcode
+            if not isinstance(opcode, IVMOpcode):
+                try:
+                    opcode = IVMOpcode[opcode.name]
+                except (KeyError, AttributeError):
+                    pass
             arg = instruction.arg
+            arg2 = getattr(instruction, "arg2", 0)
             frame.ip += 1
 
             self._fire("instruction", opcode.value, frame.ip - 1, frame.function_name)
 
-            if opcode == OpCode.HALT:
+            if opcode == IVMOpcode.HALT:
                 break
 
-            elif opcode == OpCode.LOAD_CONST:
+            elif opcode == IVMOpcode.LOAD_CONST:
                 self._stack.push(constants[arg] if arg is not None else None)
 
-            elif opcode == OpCode.LOAD_NULL:
+            elif opcode == IVMOpcode.LOAD_NULL:
                 self._stack.push(None)
 
-            elif opcode == OpCode.LOAD_TRUE:
+            elif opcode == IVMOpcode.LOAD_TRUE:
                 self._stack.push(True)
 
-            elif opcode == OpCode.LOAD_FALSE:
+            elif opcode == IVMOpcode.LOAD_FALSE:
                 self._stack.push(False)
 
-            elif opcode == OpCode.LOAD_LOCAL:
+            elif opcode == IVMOpcode.LOAD_LOCAL:
                 self._stack.push(self._get_local(arg))
 
-            elif opcode == OpCode.STORE_LOCAL:
+            elif opcode == IVMOpcode.STORE_LOCAL:
                 val = self._stack.pop()
                 self._set_local(arg, val)
 
-            elif opcode == OpCode.LOAD_GLOBAL:
+            elif opcode == IVMOpcode.LOAD_GLOBAL:
                 name = constants[arg] if arg is not None else None
                 val = self._context.globals.get(name)
                 self._stack.push(val)
 
-            elif opcode == OpCode.STORE_GLOBAL:
+            elif opcode == IVMOpcode.STORE_GLOBAL:
                 val = self._stack.pop()
                 name = constants[arg] if arg is not None else None
                 self._context.globals[name] = val
 
-            elif opcode == OpCode.POP:
+            elif opcode == IVMOpcode.POP:
                 self._stack.pop()
 
-            elif opcode == OpCode.DUP:
+            elif opcode == IVMOpcode.DUP:
                 self._stack.dup()
 
-            elif opcode == OpCode.SWAP:
+            elif opcode == IVMOpcode.SWAP:
                 self._stack.swap()
 
-            elif opcode == OpCode.ROT_THREE:
+            elif opcode == IVMOpcode.ROT_THREE:
                 self._stack.rot_three()
 
-            elif opcode == OpCode.ADD:
+            elif opcode == IVMOpcode.ADD:
                 b = self._stack.pop()
                 a = self._stack.pop()
                 self._stack.push(a + b)
 
-            elif opcode == OpCode.SUB:
+            elif opcode == IVMOpcode.SUB:
                 b = self._stack.pop()
                 a = self._stack.pop()
                 self._stack.push(a - b)
 
-            elif opcode == OpCode.MUL:
+            elif opcode == IVMOpcode.MUL:
                 b = self._stack.pop()
                 a = self._stack.pop()
                 self._stack.push(a * b)
 
-            elif opcode == OpCode.DIV:
+            elif opcode == IVMOpcode.DIV:
                 b = self._stack.pop()
                 a = self._stack.pop()
                 if b == 0:
                     raise VMRuntimeError("division by zero", list(self._call_stack), self._current_line())
                 self._stack.push(a / b)
 
-            elif opcode == OpCode.MOD:
+            elif opcode == IVMOpcode.MOD:
                 b = self._stack.pop()
                 a = self._stack.pop()
                 if b == 0:
                     raise VMRuntimeError("modulo by zero", list(self._call_stack), self._current_line())
                 self._stack.push(a % b)
 
-            elif opcode == OpCode.NEG:
+            elif opcode == IVMOpcode.NEG:
                 val = self._stack.pop()
                 self._stack.push(-val)
 
-            elif opcode == OpCode.BIT_AND:
+            elif opcode == IVMOpcode.BIT_AND:
                 b = self._stack.pop()
                 a = self._stack.pop()
                 self._stack.push(a & b)
 
-            elif opcode == OpCode.BIT_OR:
+            elif opcode == IVMOpcode.BIT_OR:
                 b = self._stack.pop()
                 a = self._stack.pop()
                 self._stack.push(a | b)
 
-            elif opcode == OpCode.BIT_XOR:
+            elif opcode == IVMOpcode.BIT_XOR:
                 b = self._stack.pop()
                 a = self._stack.pop()
                 self._stack.push(a ^ b)
 
-            elif opcode == OpCode.BIT_NOT:
+            elif opcode == IVMOpcode.BIT_NOT:
                 val = self._stack.pop()
                 self._stack.push(~val)
 
-            elif opcode == OpCode.LEFT_SHIFT:
+            elif opcode == IVMOpcode.LEFT_SHIFT:
                 b = self._stack.pop()
                 a = self._stack.pop()
                 self._stack.push(a << b)
 
-            elif opcode == OpCode.RIGHT_SHIFT:
+            elif opcode == IVMOpcode.RIGHT_SHIFT:
                 b = self._stack.pop()
                 a = self._stack.pop()
                 self._stack.push(a >> b)
 
-            elif opcode == OpCode.EQ:
+            elif opcode == IVMOpcode.EQ:
                 b = self._stack.pop()
                 a = self._stack.pop()
                 self._stack.push(a == b)
 
-            elif opcode == OpCode.NEQ:
+            elif opcode == IVMOpcode.NEQ:
                 b = self._stack.pop()
                 a = self._stack.pop()
                 self._stack.push(a != b)
 
-            elif opcode == OpCode.LT:
+            elif opcode == IVMOpcode.LT:
                 b = self._stack.pop()
                 a = self._stack.pop()
                 self._stack.push(a < b)
 
-            elif opcode == OpCode.LTE:
+            elif opcode == IVMOpcode.LTE:
                 b = self._stack.pop()
                 a = self._stack.pop()
                 self._stack.push(a <= b)
 
-            elif opcode == OpCode.GT:
+            elif opcode == IVMOpcode.GT:
                 b = self._stack.pop()
                 a = self._stack.pop()
                 self._stack.push(a > b)
 
-            elif opcode == OpCode.GTE:
+            elif opcode == IVMOpcode.GTE:
                 b = self._stack.pop()
                 a = self._stack.pop()
                 self._stack.push(a >= b)
 
-            elif opcode == OpCode.AND:
+            elif opcode == IVMOpcode.AND:
                 b = self._stack.pop()
                 a = self._stack.pop()
                 self._stack.push(bool(a) and bool(b))
 
-            elif opcode == OpCode.OR:
+            elif opcode == IVMOpcode.OR:
                 b = self._stack.pop()
                 a = self._stack.pop()
                 self._stack.push(bool(a) or bool(b))
 
-            elif opcode == OpCode.NOT:
+            elif opcode == IVMOpcode.NOT:
                 val = self._stack.pop()
                 self._stack.push(not bool(val))
 
-            elif opcode == OpCode.JUMP:
+            elif opcode == IVMOpcode.JUMP:
                 frame.ip = arg
 
-            elif opcode == OpCode.JUMP_IF_FALSE:
+            elif opcode == IVMOpcode.JUMP_IF_FALSE:
                 cond = self._stack.pop()
                 if not cond:
                     frame.ip = arg
 
-            elif opcode == OpCode.JUMP_IF_TRUE:
+            elif opcode == IVMOpcode.JUMP_IF_TRUE:
                 cond = self._stack.pop()
                 if cond:
                     frame.ip = arg
 
-            elif opcode == OpCode.JUMP_IF_FALSE_POP:
+            elif opcode == IVMOpcode.JUMP_IF_FALSE_POP:
                 cond = self._stack.pop()
                 if not cond:
                     frame.ip = arg
 
-            elif opcode == OpCode.LOOP:
+            elif opcode == IVMOpcode.LOOP:
                 frame.ip = arg
 
-            elif opcode == OpCode.CALL:
+            elif opcode == IVMOpcode.CALL:
                 arg_count = arg
                 callee = self._stack.peek_at(arg_count)
                 if isinstance(callee, VMClosure):
@@ -427,7 +433,7 @@ class VMExecutor:
                         list(self._call_stack),
                     )
 
-            elif opcode == OpCode.RETURN:
+            elif opcode == IVMOpcode.RETURN:
                 self._pop_frame()
                 if not self._call_stack:
                     self._running = False
@@ -436,7 +442,7 @@ class VMExecutor:
                 code = frame.chunk.code
                 constants = frame.chunk.constants
 
-            elif opcode == OpCode.BUILD_LIST:
+            elif opcode == IVMOpcode.BUILD_LIST:
                 count = arg
                 elements = []
                 for _ in range(count):
@@ -444,7 +450,7 @@ class VMExecutor:
                 elements.reverse()
                 self._stack.push(VMList(elements))
 
-            elif opcode == OpCode.BUILD_MAP:
+            elif opcode == IVMOpcode.BUILD_MAP:
                 count = arg
                 entries = {}
                 for _ in range(count):
@@ -455,7 +461,7 @@ class VMExecutor:
                 m._entries = entries
                 self._stack.push(m)
 
-            elif opcode == OpCode.BUILD_SET:
+            elif opcode == IVMOpcode.BUILD_SET:
                 count = arg
                 elements = []
                 for _ in range(count):
@@ -466,7 +472,7 @@ class VMExecutor:
                     s.add(e)
                 self._stack.push(s)
 
-            elif opcode == OpCode.BUILD_TUPLE:
+            elif opcode == IVMOpcode.BUILD_TUPLE:
                 count = arg
                 elements = []
                 for _ in range(count):
@@ -474,7 +480,7 @@ class VMExecutor:
                 elements.reverse()
                 self._stack.push(VMTuple(tuple(elements)))
 
-            elif opcode == OpCode.GET_ITEM:
+            elif opcode == IVMOpcode.GET_ITEM:
                 index = self._stack.pop()
                 collection = self._stack.pop()
                 if isinstance(collection, VMList):
@@ -491,10 +497,10 @@ class VMExecutor:
                         list(self._call_stack),
                     )
 
-            elif opcode == OpCode.SET_ITEM:
+            elif opcode == IVMOpcode.SET_ITEM:
                 value = self._stack.pop()
                 index = self._stack.pop()
-                collection = self._stack.pop()
+                collection = self._stack.peek()
                 if isinstance(collection, VMList):
                     collection.set(index, value)
                 elif isinstance(collection, VMMap):
@@ -505,7 +511,7 @@ class VMExecutor:
                         list(self._call_stack),
                     )
 
-            elif opcode == OpCode.SLICE:
+            elif opcode == IVMOpcode.SLICE:
                 step = self._stack.pop()
                 end = self._stack.pop()
                 start = self._stack.pop()
@@ -520,7 +526,7 @@ class VMExecutor:
                         list(self._call_stack),
                     )
 
-            elif opcode == OpCode.GET_ATTR:
+            elif opcode == IVMOpcode.GET_ATTR:
                 name = constants[arg] if arg is not None else None
                 obj = self._stack.peek()
                 if isinstance(obj, VMObject):
@@ -534,7 +540,7 @@ class VMExecutor:
                     )
                 self._stack.push(val)
 
-            elif opcode == OpCode.SET_ATTR:
+            elif opcode == IVMOpcode.SET_ATTR:
                 name = constants[arg] if arg is not None else None
                 value = self._stack.pop()
                 obj = self._stack.pop()
@@ -543,29 +549,53 @@ class VMExecutor:
                 else:
                     setattr(obj, name, value)
 
-            elif opcode == OpCode.NEW_STRUCT:
-                pass
+            elif opcode == IVMOpcode.NEW_STRUCT:
+                type_idx = arg if arg is not None else 0
+                field_count = arg2
+                type_name = constants[type_idx] if type_idx < len(constants) else "Object"
+                field_names = []
+                for _ in range(field_count):
+                    field_names.append(self._stack.pop())
+                field_names.reverse()
+                self._stack.push(VMStruct(type_name, field_names))
 
-            elif opcode == OpCode.NEW_INSTANCE:
-                pass
+            elif opcode == IVMOpcode.NEW_INSTANCE:
+                self._stack.push(VMStruct("Object", []))
 
-            elif opcode == OpCode.MAKE_FUNCTION:
+            elif opcode == IVMOpcode.MAKE_FUNCTION:
                 chunk_idx = arg if arg is not None else 0
-                name = constants[chunk_idx] if chunk_idx < len(constants) else "<lambda>"
-                arity = 0
                 func_chunk = constants[chunk_idx] if chunk_idx < len(constants) else None
+                name = func_chunk.name if hasattr(func_chunk, 'name') else "<lambda>"
+                arity = arg2
                 closure = VMClosure(func_chunk, name, arity)
                 self._stack.push(closure)
 
-            elif opcode == OpCode.MAKE_CLOSURE:
-                pass
+            elif opcode == IVMOpcode.MAKE_CLOSURE:
+                chunk_idx = arg if arg is not None else 0
+                free_count = arg2
+                func_chunk = constants[chunk_idx] if chunk_idx < len(constants) else None
+                name = func_chunk.name if hasattr(func_chunk, 'name') else "<lambda>"
+                closure = VMClosure(func_chunk, name, 0)
+                free_vars = []
+                for _ in range(free_count):
+                    free_vars.append(self._stack.pop())
+                free_vars.reverse()
+                closure.capture(free_vars)
+                self._stack.push(closure)
 
-            elif opcode == OpCode.GET_ITER:
+            elif opcode == IVMOpcode.LOAD_FREE:
+                frame = self._call_stack[-1]
+                if frame.closure is not None and arg is not None and arg < len(frame.closure.free_vars):
+                    self._stack.push(frame.closure.free_vars[arg])
+                else:
+                    self._stack.push(None)
+
+            elif opcode == IVMOpcode.GET_ITER:
                 collection = self._stack.pop()
                 iterator = VMIterator(collection)
                 self._stack.push(iterator)
 
-            elif opcode == OpCode.FOR_ITER:
+            elif opcode == IVMOpcode.FOR_ITER:
                 iterator = self._stack.peek()
                 if isinstance(iterator, VMIterator) and iterator.has_next():
                     val = iterator.next()
@@ -573,7 +603,7 @@ class VMExecutor:
                 else:
                     frame.ip += arg
 
-            elif opcode == OpCode.RAISE:
+            elif opcode == IVMOpcode.RAISE:
                 if len(self._exception_handlers) > 0:
                     pass
                 else:
@@ -581,14 +611,101 @@ class VMExecutor:
                     exc = self._make_exception(str(message))
                     raise VMRuntimeError(str(message), list(self._call_stack), self._current_line())
 
-            elif opcode == OpCode.SETUP_TRY:
+            elif opcode == IVMOpcode.THROW:
+                if len(self._exception_handlers) > 0:
+                    pass
+                else:
+                    message = self._stack.pop()
+                    raise VMRuntimeError(str(message), list(self._call_stack), self._current_line())
+
+            elif opcode == IVMOpcode.SETUP_TRY:
                 self._exception_handlers.append(len(self._call_stack))
 
-            elif opcode == OpCode.POP_BLOCK:
+            elif opcode == IVMOpcode.POP_BLOCK:
                 if self._exception_handlers:
                     self._exception_handlers.pop()
 
-            elif opcode == OpCode.NOP:
+            elif opcode == IVMOpcode.ENTER_FRAME:
+                for _ in range(arg or 0):
+                    self._stack.push(None)
+
+            elif opcode == IVMOpcode.EXIT_FRAME:
+                if self._call_stack:
+                    self._stack.truncate(self._call_stack[-1].base_pointer)
+
+            elif opcode == IVMOpcode.LOAD_FAST:
+                self._stack.push(self._get_local(arg))
+
+            elif opcode == IVMOpcode.STORE_FAST:
+                val = self._stack.pop()
+                self._set_local(arg, val)
+
+            elif opcode == IVMOpcode.GET_STATIC:
+                name = constants[arg] if arg is not None and arg < len(constants) else None
+                self._stack.push(self._context.globals.get(name))
+
+            elif opcode == IVMOpcode.PUT_STATIC:
+                name = constants[arg] if arg is not None and arg < len(constants) else None
+                self._context.globals[name] = self._stack.pop()
+
+            elif opcode in (IVMOpcode.INVOKE, IVMOpcode.INVOKE_VIRTUAL, IVMOpcode.INVOKE_INTERFACE):
+                name = constants[arg] if arg is not None and arg < len(constants) else None
+                arg_count = arg2
+                receiver = self._stack.peek_at(arg_count)
+                method = getattr(receiver, name, None)
+                if method is None:
+                    raise VMRuntimeError(
+                        f"method '{name}' not found on {type(receiver).__name__}",
+                        list(self._call_stack),
+                    )
+                args = []
+                for _ in range(arg_count):
+                    args.append(self._stack.pop())
+                args.reverse()
+                self._stack.pop()
+                result = method(*args)
+                self._stack.push(result)
+
+            elif opcode == IVMOpcode.INSTANCE_OF:
+                type_name = constants[arg] if arg is not None and arg < len(constants) else None
+                obj = self._stack.pop()
+                actual = getattr(obj, 'type_name', type(obj).__name__)
+                self._stack.push(actual == type_name)
+
+            elif opcode == IVMOpcode.NEW_ARRAY:
+                count = arg
+                elements = []
+                for _ in range(count):
+                    elements.append(self._stack.pop())
+                elements.reverse()
+                self._stack.push(VMList(elements))
+
+            elif opcode == IVMOpcode.NEW_OBJECT:
+                self._stack.push(VMStruct("Object", []))
+
+            elif opcode == IVMOpcode.GET_FIELD:
+                name = constants[arg] if arg is not None and arg < len(constants) else None
+                obj = self._stack.peek()
+                if isinstance(obj, VMObject) and hasattr(obj, 'get_field'):
+                    self._stack.push(obj.get_field(name))
+                else:
+                    self._stack.push(getattr(obj, name, None))
+
+            elif opcode == IVMOpcode.PUT_FIELD:
+                name = constants[arg] if arg is not None and arg < len(constants) else None
+                value = self._stack.pop()
+                obj = self._stack.peek()
+                if isinstance(obj, VMObject) and hasattr(obj, 'set_field'):
+                    obj.set_field(name, value)
+                else:
+                    setattr(obj, name, value)
+
+            elif opcode in (IVMOpcode.RESUME, IVMOpcode.YIELD, IVMOpcode.AWAIT,
+                            IVMOpcode.SEND, IVMOpcode.FINALLY, IVMOpcode.LOCK,
+                            IVMOpcode.UNLOCK, IVMOpcode.NOP2):
+                pass
+
+            elif opcode == IVMOpcode.NOP:
                 pass
 
             else:

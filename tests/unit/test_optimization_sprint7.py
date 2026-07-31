@@ -81,6 +81,11 @@ class _FuncDict(dict):
     def __iter__(self):
         return iter(self.values())
 
+    def __getitem__(self, key):
+        if isinstance(key, int):
+            return list(self.values())[key]
+        return dict.__getitem__(self, key)
+
 
 @property
 def _patched_module_functions(self):

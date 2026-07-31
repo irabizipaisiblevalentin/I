@@ -46,7 +46,11 @@ class Document:
 
     def __post_init__(self) -> None:
         if not self.doc_id:
-            self.doc_id = hashlib.md5(self.content.encode()).hexdigest()[:16]
+            try:
+                digest = hashlib.md5(self.content.encode(), usedforsecurity=False)
+            except TypeError:  # Python < 3.9
+                digest = hashlib.md5(self.content.encode())
+            self.doc_id = digest.hexdigest()[:16]
         if not self.timestamp:
             self.timestamp = time.time()
 

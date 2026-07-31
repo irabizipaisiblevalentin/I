@@ -61,7 +61,7 @@ def kongera_iyobokamana(ibikorwa: Any) -> None:
     # isoko ibiro gufasha
     amategeko.add_parser("gufasha", help="Gufasha kuri IBIRO CLI")
 
-    iyobokamana.set_default(func=genda)
+    iyobokamana.set_defaults(func=genda)
 
 
 def genda(ibitekerezo: argparse.Namespace) -> int:

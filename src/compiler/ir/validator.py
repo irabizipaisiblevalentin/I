@@ -170,6 +170,8 @@ class IRValidator:
                 continue
             if isinstance(op, Argument):
                 continue
+            if isinstance(op, IRFunction):
+                continue
             if isinstance(op, Value) and op not in defined:
                 self._errors.append(
                     f"Use before def: '{inst.name}' uses '{op.name}' "
@@ -186,9 +188,9 @@ class IRValidator:
     ) -> None:
         for op in inst.operands:
             if isinstance(op, Value) and not isinstance(op, Constant):
-                if isinstance(op, BasicBlock):
+                if isinstance(op, (BasicBlock, IRFunction)):
                     continue
-                if op.parent is None and not isinstance(op, (Constant,)):
+                if getattr(op, "parent", None) is None and not isinstance(op, (Constant,)):
                     self._warnings.append(
                         f"Instruction '{inst.name}' uses value '{op.name}' "
                         f"with no parent block"

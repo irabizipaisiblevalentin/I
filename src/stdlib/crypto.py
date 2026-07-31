@@ -19,12 +19,18 @@ from typing import Optional
 
 def hash_md5(data: bytes) -> str:
     """MD5 hash (not for security, only for checksums)."""
-    return hashlib.md5(data).hexdigest()
+    try:
+        return hashlib.md5(data, usedforsecurity=False).hexdigest()
+    except TypeError:  # Python < 3.9
+        return hashlib.md5(data).hexdigest()
 
 
 def hash_sha1(data: bytes) -> str:
-    """SHA-1 hash."""
-    return hashlib.sha1(data).hexdigest()
+    """SHA-1 hash (legacy; not recommended for security)."""
+    try:
+        return hashlib.sha1(data, usedforsecurity=False).hexdigest()
+    except TypeError:  # Python < 3.9
+        return hashlib.sha1(data).hexdigest()
 
 
 def hash_sha256(data: bytes) -> str:

@@ -555,15 +555,17 @@ class SemanticAnalyzer(ASTVisitor):
         self.ctx.exit_class()
 
     def visit_import_decl(self, decl: ImportDecl) -> None:
-        path = _name_of(decl)
+        path = _name_of(decl.path)
         loc = _location_of(decl, self.ctx.current_file)
         alias = decl.alias
         if alias is not None:
             alias = _name_of(alias) if not isinstance(alias, str) else alias
 
-        self.ctx.imports.resolve_import(
+        module_sym = self.ctx.imports.resolve_import(
             path, alias, self.ctx.diagnostics, loc,
         )
+        if module_sym is not None:
+            self.ctx.scopes.define(module_sym)
 
     def visit_export_decl(self, decl: ExportDecl) -> None:
         name = _name_of(decl)
@@ -642,7 +644,9 @@ class SemanticAnalyzer(ASTVisitor):
         iterable_type = self._analyze_expr(stmt.iterable)
         self.ctx.enter_loop()
         self.ctx.enter_block("foreach")
-        elem_name = _name_of(stmt)
+        elem_name = getattr(stmt, 'element', None) or ""
+        if not isinstance(elem_name, str):
+            elem_name = _name_of(elem_name)
         elem_type = TYPE_ANY
         if iterable_type and iterable_type.kind == SymbolType.LIST and iterable_type.element_type:
             elem_type = iterable_type.element_type
@@ -802,7 +806,8 @@ class SemanticAnalyzer(ASTVisitor):
             return TYPE_ANY
 
         # Comparison operators
-        if op_str in ('==', '!=', '===', '!==', '>', '<', '>=', '<='):
+        if op_str in ('==', '!=', '===', '!==', '>', '<', '>=', '<=',
+                      'irenze', 'munsi', 'munsi_ya'):
             return TYPE_BOOL
 
         # Bitwise operators

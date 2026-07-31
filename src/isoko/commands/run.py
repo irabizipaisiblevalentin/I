@@ -48,7 +48,7 @@ def run(args) -> int:
 
     try:
         result = subprocess.run(
-            [sys.executable, "-m", "vm.virtual_machine", file_path] + extra_args,
+            [sys.executable, "-m", "vm.virtual_machine", os.path.abspath(file_path)] + extra_args,
             cwd=os.path.dirname(os.path.abspath(file_path)),
         )
         return result.returncode

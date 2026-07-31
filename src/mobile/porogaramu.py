@@ -126,6 +126,8 @@ class MobileApplication(Application):
         super().run()
         self.on_start()
         self.on_resume()
+        if self.current_activity is None and self._activities:
+            self.start_activity(self._activities[0])
 
     def stop(self) -> None:
         """Gracefully stop the mobile application."""
@@ -299,8 +301,8 @@ class MobileApplication(Application):
     def on_low_memory(self) -> None:
         """Called when the system is running low on memory."""
         self.logger.warning("Low memory warning received")
-        for activity in reversed(self._activity_stack):
-            if activity.state == ActivityState.KURAHAGARARA:
+        for activity in reversed(list(self._activity_stack)):
+            if activity.state != ActivityState.KURASENZWE:
                 self.finish_activity(activity)
         self.emit("app.low_memory", {})
 
@@ -311,11 +313,11 @@ class MobileApplication(Application):
             True if the back press was handled, False otherwise.
         """
         current = self.current_activity
-        if current is not None:
+        if current is not None and len(self._activity_stack) > 1:
             if self._navigator.can_go_back:
                 self._navigator.pop()
-                self.finish_activity(current)
-                return True
+            self.finish_activity(current)
+            return True
         self.emit("app.back_pressed", {})
         return False
 

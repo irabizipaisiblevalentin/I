@@ -5,13 +5,33 @@ All notable changes to the I Programming Language will be documented in this fil
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [1.0.0] - 2026-07-31
 
 ### Added
-- Initial repository structure for million-line scale
-- Professional documentation foundation
-- Project governance and contribution guidelines
-- Security and conduct policies
+- Packaging: wheel now ships all 15 packages from `src/` plus the `stdlib/urubuga.i` framework source and `py.typed` markers; `i` console script installs and runs.
+- CLI: `i --version`, clean diagnostics for lexical/parse errors, `-o` bytecode artifact output, and a `__main__` guard for `vm.virtual_machine`.
+- Language: `andika` print statement; word comparison operators `irenze` (`>`), `munsi` / `munsi_ya` (`<`).
+- Runtime: legacy VM function dispatch (`_collect_functions`, `_call`, `_call_function`) with recursion and scope cleanup; for/for-each iteration on legacy stack semantics.
+- `isoko`: `isoko run` resolves files via absolute path; registry tokens stored with owner-only permissions.
+- Tests: `tests/e2e/` CLI suite (6 subprocess tests) and stdlib wheel suite (3 tests); archive safe-extraction and login-permission security tests.
+- Security: safe zip/tar extraction (path-traversal and link rejection), debugger `eval` dunder-escape blocking, MD5/SHA-1 marked `usedforsecurity=False`.
+
+### Changed
+- Version metadata `0.1.0` -> `1.0.0` across all packages; classifiers to `5 - Production/Stable`.
+- CI workflows updated for current layout (Python 3.12, wheel-completeness job, e2e job, bandit/safety job).
+- `pyproject.toml`: `packages.find where = ["src"]`, package-data for `stdlib/*.i`.
+
+### Fixed
+- Empty wheel (packages excluded by `where = ["."]`).
+- CLI crash on `LexerError`/`ParseError` (non-exception dataclasses caught as exceptions).
+- `examples/loops.i` step-expression parse guard and legacy-VM local-slot reuse.
+- `isoko run` failing when invoked from a directory other than the target file's directory.
+
+### Removed
+- N/A
+
+### Security
+- See `SECURITY_VALIDATION_REPORT.md` for the full validation and dispositions.
 
 ## [0.1.0] - 2026-07-22
 

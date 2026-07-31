@@ -332,6 +332,16 @@ def cmd_cluster_nodes(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_cluster_delete(args: argparse.Namespace) -> int:
+    from .imiyoborere import ClusterManager
+    mgr = ClusterManager()
+    if not mgr.delete(args.name):
+        print(f"Cluster '{args.name}' not found")
+        return 1
+    print(f"Cluster '{args.name}' deleted")
+    return 0
+
+
 def cmd_image_build(args: argparse.Namespace) -> int:
     from .ikorwa import ImageBuilder
     builder = ImageBuilder()

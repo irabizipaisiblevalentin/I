@@ -55,7 +55,7 @@ class GarbageCollector:
         "_heap", "_young_gen", "_old_gen", "_stats",
         "_gc_threshold", "_gc_count", "_generational",
         "_incremental", "_stw_limit_ms", "_promotion_threshold",
-        "_auto_collect",
+        "_auto_collect", "_stack_roots", "_global_roots",
     )
 
     YOUNG_GEN = 0
@@ -80,6 +80,8 @@ class GarbageCollector:
         self._stw_limit_ms = stw_limit_ms
         self._promotion_threshold = 2
         self._auto_collect = True
+        self._stack_roots: list[Any] = []
+        self._global_roots: list[Any] = []
 
     @property
     def stats(self) -> GCStats:
@@ -196,8 +198,16 @@ class GarbageCollector:
         return before - after
 
     def _get_roots(self) -> list[Any]:
-        """Get GC roots — currently just tracked objects marked as roots."""
-        return []
+        """Get GC roots — stack and global roots registered by the VM."""
+        return list(self._stack_roots) + list(self._global_roots)
+
+    def set_stack_roots(self, roots: list[Any]) -> None:
+        """Set the roots reachable from the VM value stack."""
+        self._stack_roots = list(roots)
+
+    def set_global_roots(self, roots: list[Any]) -> None:
+        """Set the roots reachable from VM globals."""
+        self._global_roots = list(roots)
 
     def set_roots(self, roots: list[Any]) -> None:
         """Override the root set (called by VM with stack globals)."""

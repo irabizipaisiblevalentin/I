@@ -6,7 +6,7 @@ and device integration built on the UFA foundation.
 
 from __future__ import annotations
 
-__version__ = "0.1.0"
+__version__ = "1.0.0"
 __all__ = [
     "MobileApplication",
     "Ikiganiro",

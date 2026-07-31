@@ -10,11 +10,15 @@ from pathlib import Path
 
 from compiler.codegen.bytecode import Chunk
 from compiler.codegen.generator import CodeGenerator
-from compiler.lexer.lexer import Lexer, LexerError
-from compiler.parser.parser import ParseError, Parser
+from compiler.lexer.lexer import Lexer
+from compiler.parser.parser import Parser
 from compiler.semantic.analyzer import SemanticAnalyzer
 from vm.virtual_machine import RuntimeError as VMRuntimeError
 from vm.virtual_machine import VirtualMachine
+
+
+class CompilerError(Exception):
+    """User-facing compilation error (lexical, parse, or semantic)."""
 
 
 class Compiler:
@@ -40,9 +44,7 @@ class Compiler:
 
         Raises:
             FileNotFoundError: If the file doesn't exist
-            LexerError: If there's a lexical error
-            ParseError: If there's a parse error
-            SemanticError: If there's a semantic error
+            CompilerError: If there are lexical, parse, or semantic errors
         """
         path = Path(file_path)
         if not path.exists():
@@ -63,9 +65,7 @@ class Compiler:
             Compiled bytecode chunk
 
         Raises:
-            LexerError: If there's a lexical error
-            ParseError: If there's a parse error
-            SemanticError: If there's a semantic error
+            CompilerError: If there are lexical, parse, or semantic errors
         """
         # Lexical Analysis
         if self.verbose:
@@ -73,6 +73,11 @@ class Compiler:
 
         self.lexer = Lexer(source)
         tokens = self.lexer.tokenize()
+
+        if self.lexer.has_errors:
+            raise CompilerError(
+                f"Lexical errors:\n{self.lexer.errors.format_all()}"
+            )
 
         if self.verbose:
             print(f"  Generated {len(tokens)} tokens")
@@ -83,6 +88,11 @@ class Compiler:
 
         self.parser = Parser(tokens)
         ast = self.parser.parse()
+
+        if self.parser.has_errors:
+            raise CompilerError(
+                f"Parse errors:\n{self.parser.errors.format_all()}"
+            )
 
         if self.verbose:
             print(f"  Generated {len(ast.declarations)} declarations")
@@ -100,7 +110,7 @@ class Compiler:
             print(f"  Semantic analysis complete ({diag_count} errors)")
 
         if self.semantic_analyzer.has_errors:
-            raise RuntimeError(
+            raise CompilerError(
                 f"Semantic errors:\n{self.semantic_analyzer.diagnostics.format_all()}"
             )
 
@@ -129,9 +139,7 @@ class Compiler:
 
         Raises:
             FileNotFoundError: If the file doesn't exist
-            LexerError: If there's a lexical error
-            ParseError: If there's a parse error
-            SemanticError: If there's a semantic error
+            CompilerError: If there are lexical, parse, or semantic errors
             VMRuntimeError: If there's a runtime error
         """
         chunk = self.compile_file(file_path)
@@ -148,9 +156,7 @@ class Compiler:
             Result of execution
 
         Raises:
-            LexerError: If there's a lexical error
-            ParseError: If there's a parse error
-            SemanticError: If there's a semantic error
+            CompilerError: If there are lexical, parse, or semantic errors
             VMRuntimeError: If there's a runtime error
         """
         chunk = self.compile_source(source)
@@ -232,7 +238,7 @@ def main():
     parser.add_argument(
         '--version',
         action='version',
-        version='I Programming Language Compiler v0.1.0'
+        version='I Programming Language Compiler v1.0.0'
     )
 
     args = parser.parse_args()
@@ -253,9 +259,7 @@ def main():
 
         # Run if requested
         if args.run:
-            result = compiler.run_chunk(chunk)
-            if result is not None:
-                print(f"Result: {result}")
+            compiler.run_chunk(chunk)
 
         # Save bytecode if output specified
         if args.output:
@@ -269,19 +273,9 @@ def main():
         print(f"Error: {e}", file=sys.stderr)
         sys.exit(1)
 
-    except LexerError as e:
-        print(f"Lexical Error: {e}", file=sys.stderr)
+    except CompilerError as e:
+        print(str(e), file=sys.stderr)
         sys.exit(1)
-
-    except ParseError as e:
-        print(f"Parse Error: {e}", file=sys.stderr)
-        sys.exit(1)
-
-    except RuntimeError as e:
-        if "Semantic errors" in str(e):
-            print(str(e), file=sys.stderr)
-            sys.exit(1)
-        raise
 
     except VMRuntimeError as e:
         print(f"Runtime Error: {e}", file=sys.stderr)

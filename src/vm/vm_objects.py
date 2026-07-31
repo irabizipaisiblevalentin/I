@@ -206,7 +206,9 @@ class VMStruct(VMObject):
         return self._field_names
 
     def get_field(self, name: str) -> Any:
-        return self._fields.get(name)
+        if name not in self._fields:
+            raise AttributeError(f"struct '{self._type_name}' has no field '{name}'")
+        return self._fields[name]
 
     def set_field(self, name: str, value: Any) -> None:
         if name not in self._fields:

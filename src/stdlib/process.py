@@ -1,6 +1,11 @@
 """process — Process management for the I language.
 
 Provides subprocess execution, process control, and inter-process communication.
+
+Security note: the default helpers ``run``, ``run_checked``, ``run_capture`` and
+``popen`` execute without a shell (list-based, no metacharacter expansion) and are
+safe to call with untrusted arguments. ``exec_command`` is the only shell-based
+entry point; it must never receive untrusted input.
 """
 
 from __future__ import annotations
@@ -63,7 +68,12 @@ def popen(command: Union[str, List[str]], cwd: Optional[str] = None):
 
 
 def exec_command(command: str) -> Tuple[int, str, str]:
-    """Execute shell command, return (returncode, stdout, stderr)."""
+    """Execute shell command, return (returncode, stdout, stderr).
+
+    Security: runs ``command`` through the OS shell (``shell=True``), so shell
+    metacharacters are interpreted. Never pass untrusted input here; use
+    ``run``/``run_checked`` with an argument list instead.
+    """
     result = subprocess.run(command, shell=True, capture_output=True, text=True)
     return result.returncode, result.stdout, result.stderr
 

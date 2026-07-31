@@ -4,7 +4,7 @@ I Programming Language Compiler Package.
 This package contains the complete compiler implementation for the I programming language.
 """
 
-__version__ = "0.1.0"
+__version__ = "1.0.0"
 __author__ = "Irabizi Paisible Valentin"
 
 from compiler.lexer import Lexer, LexerError, tokenize, Token, TokenType

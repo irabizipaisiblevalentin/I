@@ -83,7 +83,7 @@ def parse_no_errors(source: str) -> Program:
 
 def get_stmts(source: str) -> list:
     """Parse and get statement list."""
-    return parse_no_errors(source).statements
+    return parse_no_errors(source).declarations
 
 
 def get_first_stmt(source: str):
@@ -165,12 +165,12 @@ class TestIdentifiers:
     def test_simple_identifier(self):
         expr = get_first_expr("x")
         assert isinstance(expr, IdentifierExpr)
-        assert expr.name.lexeme == "x"
+        assert expr.name == "x"
 
     def test_underscore_identifier(self):
         expr = get_first_expr("_private")
         assert isinstance(expr, IdentifierExpr)
-        assert expr.name.lexeme == "_private"
+        assert expr.name == "_private"
 
 
 # ══════════════════════════════════════════════════════════════════
@@ -184,62 +184,62 @@ class TestBinaryExpressions:
     def test_addition(self):
         expr = get_first_expr("1 + 2")
         assert isinstance(expr, BinaryExpr)
-        assert expr.operator.lexeme == "+"
+        assert expr.operator == "+"
 
     def test_subtraction(self):
         expr = get_first_expr("1 - 2")
         assert isinstance(expr, BinaryExpr)
-        assert expr.operator.lexeme == "-"
+        assert expr.operator == "-"
 
     def test_multiplication(self):
         expr = get_first_expr("1 * 2")
         assert isinstance(expr, BinaryExpr)
-        assert expr.operator.lexeme == "*"
+        assert expr.operator == "*"
 
     def test_division(self):
         expr = get_first_expr("1 / 2")
         assert isinstance(expr, BinaryExpr)
-        assert expr.operator.lexeme == "/"
+        assert expr.operator == "/"
 
     def test_modulo(self):
         expr = get_first_expr("1 % 2")
         assert isinstance(expr, BinaryExpr)
-        assert expr.operator.lexeme == "%"
+        assert expr.operator == "%"
 
     def test_power(self):
         expr = get_first_expr("2 ** 3")
         assert isinstance(expr, BinaryExpr)
-        assert expr.operator.lexeme == "**"
+        assert expr.operator == "**"
 
     def test_equal(self):
         expr = get_first_expr("1 == 2")
         assert isinstance(expr, BinaryExpr)
-        assert expr.operator.lexeme == "=="
+        assert expr.operator == "=="
 
     def test_not_equal(self):
         expr = get_first_expr("1 != 2")
         assert isinstance(expr, BinaryExpr)
-        assert expr.operator.lexeme == "!="
+        assert expr.operator == "!="
 
     def test_greater(self):
         expr = get_first_expr("1 > 2")
         assert isinstance(expr, BinaryExpr)
-        assert expr.operator.lexeme == ">"
+        assert expr.operator == ">"
 
     def test_less(self):
         expr = get_first_expr("1 < 2")
         assert isinstance(expr, BinaryExpr)
-        assert expr.operator.lexeme == "<"
+        assert expr.operator == "<"
 
     def test_greater_equal(self):
         expr = get_first_expr("1 >= 2")
         assert isinstance(expr, BinaryExpr)
-        assert expr.operator.lexeme == ">="
+        assert expr.operator == ">="
 
     def test_less_equal(self):
         expr = get_first_expr("1 <= 2")
         assert isinstance(expr, BinaryExpr)
-        assert expr.operator.lexeme == "<="
+        assert expr.operator == "<="
 
 
 # ══════════════════════════════════════════════════════════════════
@@ -253,32 +253,32 @@ class TestLogicalExpressions:
     def test_and(self):
         expr = get_first_expr("x kandi y")
         assert isinstance(expr, LogicalExpr)
-        assert expr.operator.lexeme == "kandi"
+        assert expr.operator == "kandi"
 
     def test_or(self):
         expr = get_first_expr("x cyangwa y")
         assert isinstance(expr, LogicalExpr)
-        assert expr.operator.lexeme == "cyangwa"
+        assert expr.operator == "cyangwa"
 
     def test_and_operator(self):
         expr = get_first_expr("x && y")
         assert isinstance(expr, LogicalExpr)
-        assert expr.operator.lexeme == "&&"
+        assert expr.operator == "&&"
 
     def test_or_operator(self):
         expr = get_first_expr("x || y")
         assert isinstance(expr, LogicalExpr)
-        assert expr.operator.lexeme == "||"
+        assert expr.operator == "||"
 
     def test_not(self):
         expr = get_first_expr("si x")
         assert isinstance(expr, UnaryExpr)
-        assert expr.operator.lexeme == "si"
+        assert expr.operator == "si"
 
     def test_bang(self):
         expr = get_first_expr("!x")
         assert isinstance(expr, UnaryExpr)
-        assert expr.operator.lexeme == "!"
+        assert expr.operator == "!"
 
 
 # ══════════════════════════════════════════════════════════════════
@@ -292,23 +292,23 @@ class TestPrecedence:
     def test_add_before_mul(self):
         expr = get_first_expr("1 + 2 * 3")
         assert isinstance(expr, BinaryExpr)
-        assert expr.operator.lexeme == "+"
+        assert expr.operator == "+"
         assert isinstance(expr.right, BinaryExpr)
-        assert expr.right.operator.lexeme == "*"
+        assert expr.right.operator == "*"
 
     def test_mul_before_add(self):
         expr = get_first_expr("1 * 2 + 3")
         assert isinstance(expr, BinaryExpr)
-        assert expr.operator.lexeme == "+"
+        assert expr.operator == "+"
         assert isinstance(expr.left, BinaryExpr)
-        assert expr.left.operator.lexeme == "*"
+        assert expr.left.operator == "*"
 
     def test_power_right_assoc(self):
         expr = get_first_expr("2 ** 3 ** 4")
         assert isinstance(expr, BinaryExpr)
-        assert expr.operator.lexeme == "**"
+        assert expr.operator == "**"
         assert isinstance(expr.right, BinaryExpr)
-        assert expr.right.operator.lexeme == "**"
+        assert expr.right.operator == "**"
 
     def test_comparison_before_logical(self):
         expr = get_first_expr("1 < 2 kandi 3 > 4")
@@ -332,22 +332,22 @@ class TestAssignment:
     def test_compound_plus(self):
         expr = get_first_expr("x += 1")
         assert isinstance(expr, CompoundAssignmentExpr)
-        assert expr.operator.lexeme == "+="
+        assert expr.operator == "+="
 
     def test_compound_minus(self):
         expr = get_first_expr("x -= 1")
         assert isinstance(expr, CompoundAssignmentExpr)
-        assert expr.operator.lexeme == "-="
+        assert expr.operator == "-="
 
     def test_compound_times(self):
         expr = get_first_expr("x *= 2")
         assert isinstance(expr, CompoundAssignmentExpr)
-        assert expr.operator.lexeme == "*="
+        assert expr.operator == "*="
 
     def test_compound_divide(self):
         expr = get_first_expr("x /= 2")
         assert isinstance(expr, CompoundAssignmentExpr)
-        assert expr.operator.lexeme == "/="
+        assert expr.operator == "/="
 
 
 # ══════════════════════════════════════════════════════════════════
@@ -440,7 +440,7 @@ class TestStatements:
     def test_var_declaration(self):
         stmt = get_first_stmt("shyira x = 42")
         assert isinstance(stmt, VarStmt)
-        assert stmt.name.lexeme == "x"
+        assert stmt.name == "x"
         assert not stmt.is_const
 
     def test_const_declaration(self):
@@ -575,12 +575,12 @@ class TestLoopStatements:
     def test_for_loop(self):
         stmt = get_first_stmt("kuri i = 0 kugeza 10 kora iherezo")
         assert isinstance(stmt, ForStmt)
-        assert stmt.variable.lexeme == "i"
+        assert stmt.variable == "i"
 
     def test_for_each_loop(self):
         stmt = get_first_stmt("buri x muri items kora iherezo")
         assert isinstance(stmt, ForEachStmt)
-        assert stmt.element.lexeme == "x"
+        assert stmt.element == "x"
 
 
 # ══════════════════════════════════════════════════════════════════
@@ -594,7 +594,7 @@ class TestFunctionDeclaration:
     def test_simple_function(self):
         stmt = get_first_stmt("umurimo foo() kora iherezo")
         assert isinstance(stmt, FunctionStmt)
-        assert stmt.name.lexeme == "foo"
+        assert stmt.name == "foo"
 
     def test_function_with_params(self):
         stmt = get_first_stmt("umurimo add(a, b) kora iherezo")
@@ -623,13 +623,13 @@ class TestClassDeclaration:
     def test_simple_class(self):
         stmt = get_first_stmt("urwego MyClass kora iherezo")
         assert isinstance(stmt, ClassStmt)
-        assert stmt.name.lexeme == "MyClass"
+        assert stmt.name == "MyClass"
 
     def test_class_with_parent(self):
         stmt = get_first_stmt("urwego Child kugira Parent kora iherezo")
         assert isinstance(stmt, ClassStmt)
         assert stmt.parent is not None
-        assert stmt.parent.lexeme == "Parent"
+        assert stmt.parent == "Parent"
 
 
 # ══════════════════════════════════════════════════════════════════
@@ -643,18 +643,18 @@ class TestImportExport:
     def test_import(self):
         stmt = get_first_stmt("shyiramo math")
         assert isinstance(stmt, ImportStmt)
-        assert stmt.path.lexeme == "math"
+        assert stmt.path == "math"
 
     def test_import_with_alias(self):
         stmt = get_first_stmt("shyiramo math kugira_ngo m")
         assert isinstance(stmt, ImportStmt)
         assert stmt.alias is not None
-        assert stmt.alias.lexeme == "m"
+        assert stmt.alias == "m"
 
     def test_export(self):
         stmt = get_first_stmt("tanga foo")
         assert isinstance(stmt, ExportStmt)
-        assert stmt.name.lexeme == "foo"
+        assert stmt.name == "foo"
 
 
 # ══════════════════════════════════════════════════════════════════
@@ -692,13 +692,13 @@ class TestErrorRecovery:
         """Test recovery for missing iherezo."""
         ast, errors = parse("niba x > 0 kora\n    subira 1\n")
         # Should still parse something
-        assert len(ast.statements) > 0
+        assert len(ast.declarations) > 0
 
     def test_invalid_statement(self):
         """Test recovery for invalid statement."""
         ast, errors = parse("42\nshyira x = 1")
         # Should still parse the second statement
-        assert len(ast.statements) >= 1
+        assert len(ast.declarations) >= 1
 
     def test_syntax_error_recovery(self):
         """Test recovery continues after error."""
@@ -719,7 +719,7 @@ class TestKinyarwandaSource:
         ast = parse_no_errors("""
 shyira izina = "Amakuru y'Isi"
 """)
-        assert len(ast.statements) == 1
+        assert len(ast.declarations) == 1
 
     def test_function_definition(self):
         ast = parse_no_errors("""
@@ -727,8 +727,8 @@ umurimo soma(umubare) kora
     subira umubare * 2
 iherezo
 """)
-        assert len(ast.statements) == 1
-        assert isinstance(ast.statements[0], FunctionStmt)
+        assert len(ast.declarations) == 1
+        assert isinstance(ast.declarations[0], FunctionStmt)
 
     def test_if_else(self):
         ast = parse_no_errors("""
@@ -738,8 +738,8 @@ cyangwa
     subira 0
 iherezo
 """)
-        assert len(ast.statements) == 1
-        assert isinstance(ast.statements[0], IfStmt)
+        assert len(ast.declarations) == 1
+        assert isinstance(ast.declarations[0], IfStmt)
 
     def test_loop(self):
         ast = parse_no_errors("""
@@ -747,8 +747,8 @@ kuri i = 0 kugeza 10 kora
     # loop body
 iherezo
 """)
-        assert len(ast.statements) == 1
-        assert isinstance(ast.statements[0], ForStmt)
+        assert len(ast.declarations) == 1
+        assert isinstance(ast.declarations[0], ForStmt)
 
     def test_class_definition(self):
         ast = parse_no_errors("""
@@ -756,8 +756,8 @@ urwego Umwanda kora
     # class body
 iherezo
 """)
-        assert len(ast.statements) == 1
-        assert isinstance(ast.statements[0], ClassStmt)
+        assert len(ast.declarations) == 1
+        assert isinstance(ast.declarations[0], ClassStmt)
 
 
 # ══════════════════════════════════════════════════════════════════
@@ -770,11 +770,11 @@ class TestEdgeCases:
 
     def test_empty_source(self):
         ast = parse_source("")
-        assert len(ast.statements) == 0
+        assert len(ast.declarations) == 0
 
     def test_comments_only(self):
         ast = parse_source("# just a comment")
-        assert len(ast.statements) == 0
+        assert len(ast.declarations) == 0
 
     def test_multiple_statements(self):
         stmts = get_stmts("shyira x = 1\nshyira y = 2\nshyira z = 3")
@@ -783,8 +783,8 @@ class TestEdgeCases:
     def test_deeply_nested(self):
         source = "niba a kora\n" + "    " * 10 + "niba b kora iherezo\n" + "iherezo"
         ast, errors = parse(source)
-        assert len(ast.statements) > 0
+        assert len(ast.declarations) > 0
 
     def test_unicode_source(self):
         ast = parse_no_errors('shyira igiciro = 100')
-        assert len(ast.statements) == 1
+        assert len(ast.declarations) == 1

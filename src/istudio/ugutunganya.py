@@ -129,6 +129,10 @@ class Debugger:
 
     def evaluate(self, expression: str) -> str:
         self._emit("evaluate", {"expression": expression})
+        # Reject dunder access to block object-capability sandbox escapes
+        # such as ``().__class__.__bases__``.
+        if "__" in expression:
+            return "<error: forbidden attribute access>"
         try:
             result = eval(expression, {"__builtins__": {}}, {})
             return str(result)

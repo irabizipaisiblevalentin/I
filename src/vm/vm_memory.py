@@ -231,10 +231,12 @@ class Heap:
 
     def track(self, obj: Any) -> None:
         self._objects.append(obj)
+        self._size += 1
 
     def untrack(self, obj: Any) -> None:
         try:
             self._objects.remove(obj)
+            self._size -= 1
         except ValueError:
             pass
 

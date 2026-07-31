@@ -25,17 +25,65 @@ class VirtualMachine:
         self.stack: List[Any] = []
         self.globals: Dict[str, Any] = {}
         self.builtins: Dict[str, Callable] = {}
+        self.functions: Dict[str, Chunk] = {}
         
         self._init_builtins()
     
     def _init_builtins(self):
         """Initialize built-in functions."""
         self.builtins['andika'] = self._builtin_print
+        self.builtins['soma'] = self._builtin_read_line
+        self.builtins['uburengero'] = lambda x: int(x)
+        self.builtins['ubwoko'] = self._builtin_type_of
+        self.builtins['shobora_int'] = lambda x: int(x)
+        self.builtins['shobora_float'] = lambda x: float(x)
+        self.builtins['shobora_umuntu'] = lambda x: str(x)
+        self.builtins['shobora_bool'] = lambda x: bool(x)
+        self.builtins['gukoma_func'] = lambda *args: None
     
     def _builtin_print(self, *args):
         """Built-in print function."""
         print(*args)
         return None
+    
+    def _builtin_read_line(self):
+        """Built-in input function (soma)."""
+        return input()
+    
+    def _builtin_type_of(self, value):
+        """Built-in type inspection function (ubwoko)."""
+        if isinstance(value, bool):
+            return 'bool'
+        if isinstance(value, int):
+            return 'int'
+        if isinstance(value, float):
+            return 'float'
+        if isinstance(value, str):
+            return 'string'
+        if isinstance(value, list):
+            return 'urutonde'
+        if isinstance(value, dict):
+            return 'ikarita'
+        if value is None:
+            return 'none'
+        return type(value).__name__
+    
+    def _collect_functions(self, chunk: Chunk) -> None:
+        """Build a name -> Chunk registry by scanning chunk constants (recursive)."""
+        self.functions.clear()
+        seen = set()
+
+        def visit(c: Chunk) -> None:
+            if id(c) in seen:
+                return
+            seen.add(id(c))
+            for const in c.constants:
+                if isinstance(const, Chunk):
+                    if const.name:
+                        self.functions.setdefault(const.name, const)
+                    visit(const)
+
+        visit(chunk)
     
     def interpret(self, chunk: Chunk) -> Any:
         """
@@ -53,6 +101,7 @@ class VirtualMachine:
         self.chunk = chunk
         self.ip = 0
         self.stack = []
+        self._collect_functions(chunk)
         
         while True:
             instruction = self._read_instruction()
@@ -363,18 +412,26 @@ class VirtualMachine:
                 raise RuntimeError("Cannot slice non-sequence type")
         
         # Objects
-        elif opcode == OpCode.FOR_ITER:
-            iterator = self._peek()
-            if hasattr(iterator, '__iter__'):
-                try:
-                    value = next(iter(iterator))
-                    self._push(value)
-                    self._push(True)
-                except StopIteration:
-                    self._pop()
-                    self._push(False)
+        elif opcode == OpCode.GET_ITER:
+            iterable = self._pop()
+            if hasattr(iterable, '__next__'):
+                self._push(iterable)
+            elif hasattr(iterable, '__iter__'):
+                self._push(iter(iterable))
             else:
                 raise RuntimeError("Cannot iterate over non-iterable")
+
+        elif opcode == OpCode.FOR_ITER:
+            iterator = self._peek()
+            if not hasattr(iterator, '__next__'):
+                raise RuntimeError("Cannot iterate over non-iterable")
+            try:
+                value = next(iterator)
+                self._push(value)
+                self._push(True)
+            except StopIteration:
+                self._pop()
+                self._push(False)
         
         # Exceptions
         elif opcode == OpCode.RAISE:
@@ -402,18 +459,58 @@ class VirtualMachine:
         
         callee = self._pop()
         
+        if isinstance(callee, Chunk):
+            args = [self._pop() for _ in range(arg_count)]
+            args.reverse()
+            result = self._call_function(callee, args)
+            self._push(result)
+            return
+        
+        if isinstance(callee, str):
+            if callee in self.builtins:
+                args = [self._pop() for _ in range(arg_count)]
+                args.reverse()
+                result = self.builtins[callee](*args)
+                self._push(result)
+                return
+            if callee in self.functions:
+                args = [self._pop() for _ in range(arg_count)]
+                args.reverse()
+                result = self._call_function(self.functions[callee], args)
+                self._push(result)
+                return
+        
         if callable(callee):
             args = [self._pop() for _ in range(arg_count)]
             args.reverse()
             result = callee(*args)
             self._push(result)
-        elif isinstance(callee, str) and callee in self.builtins:
-            args = [self._pop() for _ in range(arg_count)]
-            args.reverse()
-            result = self.builtins[callee](*args)
-            self._push(result)
-        else:
-            raise RuntimeError(f"Cannot call non-callable: {type(callee)}")
+            return
+        
+        raise RuntimeError(f"Cannot call non-callable: {type(callee)}")
+    
+    def _call_function(self, func_chunk: Chunk, args: List[Any]) -> Any:
+        """Execute a function chunk on a fresh local stack, preserving caller state.
+
+        Function chunks are self-contained (parameters and locals use slots starting
+        at 0), so they run on their own stack while sharing globals and builtins.
+        Nested/recursive calls recurse through :meth:`_call` / :meth:`_call_function`.
+        """
+        saved_chunk, saved_ip, saved_stack = self.chunk, self.ip, self.stack
+        self.chunk = func_chunk
+        self.ip = 0
+        self.stack = list(args)
+        result = None
+        try:
+            while True:
+                instruction = self._read_instruction()
+                if instruction.opcode in (OpCode.RETURN, OpCode.HALT):
+                    result = self._pop() if self.stack else None
+                    break
+                self._execute_instruction(instruction)
+        finally:
+            self.chunk, self.ip, self.stack = saved_chunk, saved_ip, saved_stack
+        return result
     
     def _push(self, value: Any):
         """Push a value onto the stack."""
@@ -437,3 +534,32 @@ class VirtualMachine:
         self.ip = 0
         self.stack = []
         self.globals = {}
+
+
+def _main() -> None:
+    """Run a bytecode file or compile+run an I source file."""
+    import pickle
+    import sys
+    from pathlib import Path
+
+    if len(sys.argv) < 2:
+        print("Usage: python -m vm.virtual_machine <file.i | bytecode.pkl> [args...]",
+              file=sys.stderr)
+        sys.exit(1)
+
+    target = Path(sys.argv[1])
+    if target.suffix in ('.pkl', '.bin'):
+        with open(target, 'rb') as f:
+            chunk = pickle.load(f)
+        VirtualMachine().interpret(chunk)
+        return
+
+    from compiler.compiler import Compiler
+
+    compiler = Compiler()
+    chunk = compiler.compile_file(str(target))
+    compiler.run_chunk(chunk)
+
+
+if __name__ == '__main__':
+    _main()

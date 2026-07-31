@@ -19,6 +19,10 @@ class PipelineConfig:
         "max_fixed_point_iterations",
         "enable_statistics",
         "enable_debug",
+        "enable_verification",
+        "debug_output_dir",
+        "dump_all_ir",
+        "dump_changed_only",
         "timeout_seconds",
         "custom_pass_order",
     )
@@ -27,6 +31,10 @@ class PipelineConfig:
         self.max_fixed_point_iterations = 4
         self.enable_statistics = True
         self.enable_debug = False
+        self.enable_verification = True
+        self.debug_output_dir = ""
+        self.dump_all_ir = False
+        self.dump_changed_only = True
         self.timeout_seconds = 0.0
         self.custom_pass_order: list[str] | None = None
 
@@ -112,6 +120,8 @@ class OptimizationPipeline:
         """Run all passes for the context's optimization level. Returns report."""
         from compiler.optimization.stats import StatisticsEngine
 
+        self._verify_ir(module, "pipeline input")
+
         level = ctx.level
         passes = self.get_passes(level)
 
@@ -128,6 +138,8 @@ class OptimizationPipeline:
     def run_fixed_point(self, module: IRModule, ctx: OptimizationContext) -> OptimizationReport:
         """Run passes repeatedly until no changes or max iterations reached."""
         from compiler.optimization.stats import StatisticsEngine
+
+        self._verify_ir(module, "pipeline input")
 
         max_iters = self._config.max_fixed_point_iterations
         stats = ctx.stats
@@ -189,6 +201,18 @@ class OptimizationPipeline:
         ctx.increment_pass_count()
         if result.changed:
             ctx.mark_changed()
+
+    def _verify_ir(self, module: IRModule, phase: str) -> None:
+        """Verify IR structural integrity. Raises RuntimeError on failure."""
+        if not self._config.enable_verification:
+            return
+        from compiler.ir.validator import IRValidator
+
+        validator = IRValidator()
+        validator.validate_module(module)
+        if not validator.is_valid:
+            details = "; ".join(validator.errors[:3])
+            raise RuntimeError(f"IR validation failed after {phase}: {details}")
 
     def _count_instructions(self, module: IRModule) -> int:
         return module.instruction_count

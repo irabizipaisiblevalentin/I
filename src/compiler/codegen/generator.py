@@ -52,6 +52,7 @@ class CodeGenerator(ASTVisitor):
         self.chunk: Optional[Chunk] = None
         self.locals: List[Dict[str, int]] = []
         self.local_count: int = 0
+        self.free_slots: List[int] = []
         self.scope_depth: int = 0
         self.loop_starts: List[int] = []
         self.loop_ends: List[int] = []
@@ -64,6 +65,7 @@ class CodeGenerator(ASTVisitor):
         self.current_chunk = self.chunk
         self.locals = [{}]
         self.local_count = 0
+        self.free_slots = []
         self.scope_depth = 0
         self.loop_starts = []
         self.loop_ends = []
@@ -94,9 +96,13 @@ class CodeGenerator(ASTVisitor):
         if name in self.locals[self.scope_depth]:
             return self.locals[self.scope_depth][name]
 
-        self.locals[self.scope_depth][name] = self.local_count
-        slot = self.local_count
-        self.local_count += 1
+        if self.free_slots:
+            slot = self.free_slots.pop(0)
+        else:
+            slot = self.local_count
+            self.local_count += 1
+
+        self.locals[self.scope_depth][name] = slot
         return slot
 
     def _resolve_variable(self, name: str) -> int:
@@ -116,13 +122,17 @@ class CodeGenerator(ASTVisitor):
         """End the current scope and pop locals."""
         self.scope_depth -= 1
         if self.scope_depth >= 0:
-            locals_in_scope = (
-                len(self.locals[self.scope_depth + 1])
+            local_dict = (
+                self.locals[self.scope_depth + 1]
                 if self.scope_depth + 1 < len(self.locals)
-                else 0
+                else {}
             )
-            for _ in range(locals_in_scope):
+            for _ in range(len(local_dict)):
                 self._emit(OpCode.POP)
+            for slot in local_dict.values():
+                self.free_slots.append(slot)
+            if self.scope_depth + 1 < len(self.locals):
+                self.locals[self.scope_depth + 1] = {}
 
     def _patch_jump(self, offset: int) -> None:
         """Patch a jump instruction to point to the current position."""
@@ -151,6 +161,9 @@ class CodeGenerator(ASTVisitor):
             '<': OpCode.LT,
             '>=': OpCode.GTE,
             '<=': OpCode.LTE,
+            'irenze': OpCode.GT,
+            'munsi': OpCode.LT,
+            'munsi_ya': OpCode.LT,
             '&': OpCode.BIT_AND,
             '|': OpCode.BIT_OR,
             '^': OpCode.BIT_XOR,
@@ -197,6 +210,7 @@ class CodeGenerator(ASTVisitor):
         saved_chunk = self.current_chunk
         saved_locals = self.locals
         saved_local_count = self.local_count
+        saved_free_slots = self.free_slots
         saved_scope_depth = self.scope_depth
 
         func_chunk = Chunk(name)
@@ -204,6 +218,7 @@ class CodeGenerator(ASTVisitor):
         self.function_chunks.append(func_chunk)
         self.locals = [{}]
         self.local_count = 0
+        self.free_slots = []
         self.scope_depth = 0
 
         # Declare parameters as locals
@@ -222,6 +237,7 @@ class CodeGenerator(ASTVisitor):
         self.current_chunk = saved_chunk
         self.locals = saved_locals
         self.local_count = saved_local_count
+        self.free_slots = saved_free_slots
         self.scope_depth = saved_scope_depth
         self.function_chunks.pop()
 
@@ -240,11 +256,13 @@ class CodeGenerator(ASTVisitor):
         saved_chunk = self.current_chunk
         saved_locals = self.locals
         saved_local_count = self.local_count
+        saved_free_slots = self.free_slots
         saved_scope_depth = self.scope_depth
 
         self.current_chunk = func_chunk
         self.locals = [{}]
         self.local_count = 0
+        self.free_slots = []
         self.scope_depth = 0
 
         # Declare parameters
@@ -265,6 +283,7 @@ class CodeGenerator(ASTVisitor):
         self.current_chunk = saved_chunk
         self.locals = saved_locals
         self.local_count = saved_local_count
+        self.free_slots = saved_free_slots
         self.scope_depth = saved_scope_depth
 
     def visit_struct_decl(self, decl: StructDecl) -> None:
@@ -371,7 +390,6 @@ class CodeGenerator(ASTVisitor):
         stmt.end.accept(self)
         self._emit(OpCode.GTE)
         exit_jump = self._emit(OpCode.JUMP_IF_TRUE)
-        self._emit(OpCode.POP)
 
         self.loop_ends.append(exit_jump)
         stmt.body.accept(self)
@@ -386,8 +404,8 @@ class CodeGenerator(ASTVisitor):
         # Jump back to start
         self._emit(OpCode.JUMP, loop_start)
 
+        # Exit path: _end_scope pops the loop variable residue from the stack
         self._patch_jump(exit_jump)
-        self._emit(OpCode.POP)
 
         self.loop_starts.pop()
         self._end_scope()
@@ -397,14 +415,18 @@ class CodeGenerator(ASTVisitor):
 
         self._begin_scope()
 
-        # Get iterator
+        # Get iterator and keep it in an internal local slot so it never
+        # collides with the element slot on the stack.
         stmt.iterable.accept(self)
         self._emit(OpCode.GET_ITER)
+        iter_slot = self._declare_variable(f"__iter_{line}")
+        self._emit(OpCode.STORE_LOCAL, iter_slot, line)
 
         loop_start = len(self.current_chunk.code) if self.current_chunk else 0
         self.loop_starts.append(loop_start)
 
-        # Get next element
+        # Reload the iterator and get the next element
+        self._emit(OpCode.LOAD_LOCAL, iter_slot, line)
         self._emit(OpCode.FOR_ITER)
         exit_jump = self._emit(OpCode.JUMP_IF_FALSE)
 
@@ -416,13 +438,15 @@ class CodeGenerator(ASTVisitor):
         stmt.body.accept(self)
         self.loop_ends.pop()
 
-        # Jump back to start
+        # Pop the element residue, then jump back to start
+        self._emit(OpCode.POP, line=line)
         self._emit(OpCode.JUMP, loop_start)
 
-        self._patch_jump(exit_jump)
-
+        # Exit path: the iterator was already consumed by FOR_ITER; skip the
+        # scope-cleanup pops (the element residue was popped above).
         self.loop_starts.pop()
         self._end_scope()
+        self._patch_jump(exit_jump)
 
     def visit_return_stmt(self, stmt: ReturnStmt) -> None:
         line = _line_of(stmt)
@@ -495,7 +519,14 @@ class CodeGenerator(ASTVisitor):
 
     def visit_identifier_expr(self, expr: IdentifierExpr) -> None:
         line = _line_of(expr)
-        slot = self._resolve_variable(_name_of(expr))
+        name = _name_of(expr)
+        try:
+            slot = self._resolve_variable(name)
+        except RuntimeError:
+            # Not a local: resolve at runtime as a builtin or top-level function
+            # name (pushed as a string constant; the VM dispatches on CALL).
+            self._emit_constant(name, line)
+            return
         self._emit(OpCode.LOAD_LOCAL, slot, line)
 
     def visit_unary_expr(self, expr: UnaryExpr) -> None:
@@ -685,11 +716,13 @@ class CodeGenerator(ASTVisitor):
         saved_chunk = self.current_chunk
         saved_locals = self.locals
         saved_local_count = self.local_count
+        saved_free_slots = self.free_slots
         saved_scope_depth = self.scope_depth
 
         self.current_chunk = lambda_chunk
         self.locals = [{}]
         self.local_count = 0
+        self.free_slots = []
         self.scope_depth = 0
 
         # Declare parameters
@@ -706,6 +739,7 @@ class CodeGenerator(ASTVisitor):
         self.current_chunk = saved_chunk
         self.locals = saved_locals
         self.local_count = saved_local_count
+        self.free_slots = saved_free_slots
         self.scope_depth = saved_scope_depth
 
         # Load lambda as constant

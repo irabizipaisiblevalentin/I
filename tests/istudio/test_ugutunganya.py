@@ -150,6 +150,12 @@ def test_evaluate_error():
     assert "error" in result
 
 
+def test_evaluate_blocks_dunder_escape():
+    d = Debugger()
+    result = d.evaluate("().__class__.__base__")
+    assert "forbidden" in result
+
+
 def test_debugger_events():
     d = Debugger()
     events = []

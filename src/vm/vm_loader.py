@@ -5,6 +5,7 @@ import struct
 from typing import Any
 
 from compiler.codegen.bytecode import Chunk, Instruction, OpCode
+from vm.vm_bytecode import IVMChunk, IVMInstruction, IVMOpcode
 
 
 class BytecodeFormat:
@@ -29,7 +30,19 @@ class VMVerifier:
 
     __slots__ = ("_errors",)
 
-    VALID_OPCODES = set(range(0, 62))
+    VALID_OPCODES = set(range(0, 89))
+
+    ARG_REQUIRED = {
+        "LOAD_CONST", "LOAD_LOCAL", "STORE_LOCAL",
+        "LOAD_GLOBAL", "STORE_GLOBAL",
+        "JUMP", "JUMP_IF_FALSE", "JUMP_IF_TRUE", "JUMP_IF_FALSE_POP", "LOOP",
+        "CALL", "BUILD_LIST", "BUILD_MAP", "BUILD_SET", "BUILD_TUPLE",
+        "MAKE_FUNCTION", "MAKE_CLOSURE",
+    }
+
+    BRANCH_OPS = {
+        "JUMP", "JUMP_IF_FALSE", "JUMP_IF_TRUE", "JUMP_IF_FALSE_POP", "LOOP",
+    }
 
     def __init__(self) -> None:
         self._errors: list[str] = []
@@ -42,12 +55,44 @@ class VMVerifier:
     def is_valid(self) -> bool:
         return len(self._errors) == 0
 
+    @staticmethod
+    def _stack_effect(inst: Any) -> int:
+        name = getattr(inst.opcode, "name", str(inst.opcode))
+        if name in ("LOAD_CONST", "LOAD_NULL", "LOAD_TRUE", "LOAD_FALSE",
+                    "LOAD_LOCAL", "LOAD_GLOBAL", "LOAD_FREE",
+                    "DUP", "NEW_INSTANCE", "MAKE_FUNCTION", "MAKE_CLOSURE",
+                    "LOAD_FAST", "GET_STATIC", "GET_FIELD", "GET_ATTR"):
+            return 1
+        if name in ("STORE_LOCAL", "STORE_GLOBAL", "STORE_FAST", "PUT_STATIC",
+                    "PUT_FIELD", "POP", "JUMP_IF_FALSE_POP"):
+            return -1
+        if name in ("ADD", "SUB", "MUL", "DIV", "MOD",
+                    "BIT_AND", "BIT_OR", "BIT_XOR", "SHIFT_LEFT", "SHIFT_RIGHT",
+                    "EQ", "NEQ", "LT", "LTE", "GT", "GTE", "AND", "OR",
+                    "GET_ITEM", "INSTANCE_OF"):
+            return -1
+        if name in ("SET_ITEM", "SET_ATTR"):
+            return -2
+        if name == "SLICE":
+            return -3
+        if name in ("BUILD_LIST", "BUILD_MAP", "BUILD_SET", "BUILD_TUPLE",
+                    "NEW_ARRAY", "NEW_OBJECT"):
+            return 1 - (inst.arg or 0)
+        if name == "CALL":
+            return -(inst.arg or 0)
+        if name in ("INVOKE", "INVOKE_VIRTUAL", "INVOKE_INTERFACE"):
+            return -(inst.arg or 0)
+        if name == "NEW_STRUCT":
+            return -(getattr(inst, "arg2", 0) or 0)
+        return 0
+
     def verify(self, chunk: Chunk) -> bool:
         self._errors.clear()
         code = chunk.code
+        depth = 0
 
         for i, inst in enumerate(code):
-            if not isinstance(inst, Instruction):
+            if not isinstance(inst, (Instruction, IVMInstruction)):
                 self._errors.append(f"offset {i}: not an Instruction")
                 continue
 
@@ -56,20 +101,27 @@ class VMVerifier:
                 self._errors.append(
                     f"offset {i}: invalid opcode {opcode_val}"
                 )
+                continue
 
-            if isinstance(inst.opcode, OpCode) and inst.opcode in (
-                OpCode.LOAD_CONST, OpCode.LOAD_LOCAL, OpCode.STORE_LOCAL,
-                OpCode.LOAD_GLOBAL, OpCode.STORE_GLOBAL,
-                OpCode.JUMP, OpCode.JUMP_IF_FALSE, OpCode.JUMP_IF_TRUE,
-                OpCode.JUMP_IF_FALSE_POP, OpCode.LOOP,
-                OpCode.CALL, OpCode.BUILD_LIST, OpCode.BUILD_MAP,
-                OpCode.BUILD_SET, OpCode.BUILD_TUPLE,
-                OpCode.MAKE_FUNCTION,
-            ):
-                if inst.arg is None:
+            name = getattr(inst.opcode, "name", str(inst.opcode))
+
+            if name in self.ARG_REQUIRED and inst.arg is None:
+                self._errors.append(
+                    f"offset {i}: {name} requires an argument"
+                )
+
+            if name in self.BRANCH_OPS and inst.arg is not None:
+                if not 0 <= inst.arg < len(code):
                     self._errors.append(
-                        f"offset {i}: {inst.opcode.name} requires an argument"
+                        f"offset {i}: branch target {inst.arg} out of range"
                     )
+
+            depth += self._stack_effect(inst)
+            if depth < 0:
+                self._errors.append(
+                    f"offset {i}: stack underflow ({name})"
+                )
+                depth = 0
 
         return self.is_valid
 
@@ -154,10 +206,10 @@ class VMLoader:
                 arg = struct.unpack(">H", data[offset:offset + 2])[0]
                 offset += 2
             try:
-                opcode = OpCode(opcode_val)
+                opcode = IVMOpcode(opcode_val)
             except ValueError:
                 raise ValueError(f"unknown opcode: {opcode_val}")
-            instructions.append(Instruction(opcode=opcode, arg=arg, line=0))
+            instructions.append(IVMInstruction(opcode=opcode, arg=arg, line=0))
 
         name = ""
         name_len = struct.unpack(">H", data[offset:offset + 2])[0]
@@ -166,9 +218,10 @@ class VMLoader:
             name = data[offset:offset + name_len].decode("utf-8")
             offset += name_len
 
-        chunk = Chunk(name=name)
-        chunk.constants = constants
+        chunk = IVMChunk(name=name)
         chunk.code = instructions
+        for const in constants:
+            chunk.add_constant(const)
         return chunk
 
     def save_bytes(self, chunk: Chunk) -> bytes:

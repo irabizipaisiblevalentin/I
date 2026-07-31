@@ -29,6 +29,7 @@ BUILTIN_TYPES: Dict[str, Symbol] = {
     'yego': make_builtin_type('bool'),
     'oya': make_builtin_type('bool'),
     'umuntu': make_builtin_type('umuntu'),
+    'string': Symbol('string', SymbolKind.BUILTIN_TYPE, TYPE_STRING, Visibility.PUBLIC, True),
     'bbyte': make_builtin_type('bbyte'),
     'urutonde': make_builtin_type('urutonde'),
     'ikarita': make_builtin_type('ikarita'),

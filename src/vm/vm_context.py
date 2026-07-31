@@ -59,7 +59,7 @@ class VMContext:
         if s in self._interned_strings:
             return self._interned_strings[s]
         idx = len(self._string_pool)
-        self._string_pool[s] = s
+        self._string_pool[idx] = s
         self._interned_strings[s] = idx
         return idx
 

@@ -229,6 +229,7 @@ class TypeChecker(ASTVisitor):
                 line=loc.line,
             )
 
+        decl.set_metadata('type', final_type)
         return final_type
 
     def visit_function_decl(self, decl: FunctionDecl) -> Type:
@@ -249,6 +250,7 @@ class TypeChecker(ASTVisitor):
                 pt = self._resolve_type_node(param.type_annotation)
             param_types.append(pt)
             param_names.append(_name_of(param))
+            param.set_metadata('type', pt)
 
         # Create function type
         func_type = FunctionType(tuple(param_types), ret_type)
@@ -289,6 +291,7 @@ class TypeChecker(ASTVisitor):
         self._return_type_stack.pop()
         self.ctx.exit_function()
 
+        decl.set_metadata('type', func_type)
         return func_type
 
     def visit_method_decl(self, decl: MethodDecl) -> Type:
@@ -311,6 +314,7 @@ class TypeChecker(ASTVisitor):
                 pt = self._resolve_type_node(param.type_annotation)
             param_types.append(pt)
             param_names.append(_name_of(param))
+            param.set_metadata('type', pt)
 
         # Register method in registry
         sig = MethodSignature(
@@ -353,6 +357,7 @@ class TypeChecker(ASTVisitor):
         self._return_type_stack.pop()
         self.ctx.exit_function()
 
+        decl.set_metadata('type', method_type)
         return method_type
 
     def visit_struct_decl(self, decl: StructDecl) -> Type:
@@ -1015,10 +1020,17 @@ class TypeChecker(ASTVisitor):
         """Check an expression and return its type."""
         if expr is None:
             return TYPE_NONE
-        return expr.accept(self)
+        result = expr.accept(self)
+        if hasattr(expr, 'set_metadata'):
+            expr.set_metadata('type', result)
+        return result
 
     def _resolve_type_node(self, type_node: TypeNode) -> Type:
         """Resolve a TypeNode AST to a Type."""
+        if isinstance(type_node, str):
+            return self._resolve_type_name(
+                type_node, TypeLocation(file=self.ctx.current_file)
+            )
         return type_node.accept(self)
 
     def _resolve_type_name(self, name: str, location: TypeLocation) -> Type:

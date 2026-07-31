@@ -139,7 +139,7 @@ class TestVirtualMachine(unittest.TestCase):
         jump_pos = chunk.emit(OpCode.JUMP_IF_FALSE)
         chunk.emit(OpCode.LOAD_CONST, chunk.add_constant(10))  # Should be skipped
         chunk.emit(OpCode.LOAD_CONST, chunk.add_constant(20))  # Should be returned
-        chunk.code[jump_pos].arg = len(chunk.code)  # Patch jump
+        chunk.code[jump_pos].arg = len(chunk.code) - 1  # Patch jump to LOAD_CONST 20
         chunk.emit(OpCode.HALT)
         
         result = self.vm.interpret(chunk)

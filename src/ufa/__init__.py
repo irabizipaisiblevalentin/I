@@ -9,4 +9,4 @@ middleware, command bus, task scheduling, observability, security, caching,
 health monitoring, localization, AI integration, and module management.
 """
 
-__version__ = "0.1.0"
+__version__ = "1.0.0"

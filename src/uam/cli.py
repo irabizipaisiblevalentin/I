@@ -394,3 +394,7 @@ def _yaml_dumps(data: Dict[str, Any]) -> str:
         else:
             lines.append(f"{key}: {value}")
     return "\n".join(lines) + "\n"
+
+
+kongera_iyobokamana = add_subparser
+genda = run

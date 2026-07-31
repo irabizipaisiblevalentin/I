@@ -29,6 +29,7 @@ from ..ast.nodes import (
     EnumStmt,
     EnumVariant,
     Expr,
+    ExportStmt,
     ExpressionStmt,
     ForEachStmt,
     ForStmt,
@@ -77,7 +78,7 @@ class Precedence:
     OR = 2            # cyangwa
     AND = 3           # kandi
     EQUALITY = 4      # == != === !==
-    COMPARISON = 5    # > < >= <=
+    COMPARISON = 5    # > < >= <= irenze munsi munsi_ya
     BITWISE_OR = 6    # |
     BITWISE_XOR = 7   # ^
     BITWISE_AND = 8   # &
@@ -90,6 +91,10 @@ class Precedence:
     PRIMARY = 15      # literals, identifiers
 
 
+# Comparison words used as infix operators (spec'd in ILS v1.0)
+WORD_OPERATORS = frozenset({'irenze', 'munsi', 'munsi_ya'})
+
+
 # ══════════════════════════════════════════════════════════════════
 # Statement-starting tokens
 # ══════════════════════════════════════════════════════════════════
@@ -99,7 +104,7 @@ STMT_STARTERS = {
     TokenType.KW_UMURIMO, TokenType.KW_IGICERI,
     TokenType.KW_IKINDI, TokenType.KW_URWEGO,
     TokenType.KW_AKABUTO, TokenType.KW_URUBINGO,
-    TokenType.KW_SHYIRAMO, TokenType.KW_TANGA_EXPORT,
+    TokenType.KW_SHYIRAMO, TokenType.KW_TANGA_YIELD,
     TokenType.KW_NIBA, TokenType.KW_WIHUSE,
     TokenType.KW_KUGEZA, TokenType.KW_KURI,
     TokenType.KW_BURI, TokenType.KW_GUKOMA,
@@ -149,12 +154,17 @@ class Parser:
         end = self._previous() if self._pos > 0 else start
         span = self._span_between(start, end)
 
-        return Program(statements=stmts, span=span)
+        return Program(declarations=stmts, location=span)
 
     # ── Statement Parsing ──────────────────────────────────────
 
     def _statement(self):
         """Parse a single statement."""
+        # Skip leading newlines
+        while self._match(TokenType.NEWLINE):
+            pass
+        if self._at_end:
+            return None
         tok = self._peek()
 
         if tok.type == TokenType.KW_NIBA:
@@ -195,8 +205,11 @@ class Parser:
             return self._trait_declaration()
         if tok.type == TokenType.KW_SHYIRAMO:
             return self._import_declaration()
-        if tok.type == TokenType.KW_TANGA_EXPORT:
+        if tok.type == TokenType.KW_TANGA_YIELD:
             return self._export_declaration()
+
+        if tok.type == TokenType.IDENTIFIER and tok.lexeme == 'andika':
+            return self._print_statement()
 
         return self._expression_statement()
 
@@ -229,11 +242,11 @@ class Parser:
         self._errors.record_success()
 
         return VarStmt(
-            name=name,
-            type_annotation=type_ann,
+            name=name.lexeme,
+            type_annotation=type_ann.lexeme if type_ann else None,
             initializer=init,
             is_const=is_const,
-            span=self._span_from(kw),
+            location=self._span_from(kw),
         )
 
     def _function_declaration(self):
@@ -270,11 +283,11 @@ class Parser:
         self._errors.record_success()
 
         return FunctionStmt(
-            name=name,
+            name=name.lexeme,
             parameters=params,
-            return_type=ret_type,
+            return_type=ret_type.lexeme if ret_type else None,
             body=body,
-            span=self._span_from(kw),
+            location=self._span_from(kw),
         )
 
     def _struct_declaration(self):
@@ -295,7 +308,11 @@ class Parser:
         fields = []
         methods = []
 
-        while not self._check(TokenType.KW_IHEREZO) and not self._at_end:
+        while not self._at_end:
+            if self._match(TokenType.NEWLINE):
+                continue
+            if self._check(TokenType.KW_IHEREZO):
+                break
             if self._check(TokenType.KW_UMURIMO):
                 methods.append(self._function_declaration())
             else:
@@ -317,7 +334,7 @@ class Parser:
                 default = None
                 if self._match(TokenType.EQ):
                     default = self._expression()
-                fields.append(StructField(field_name, field_type, default))
+                fields.append(StructField(name=field_name.lexeme, type_annotation=field_type.lexeme, default=default))
                 self._consume_newline_or_iherezo()
 
         self._consume(
@@ -326,7 +343,7 @@ class Parser:
             "Expected 'iherezo' to close struct",
         )
 
-        return StructStmt(name=name, fields=fields, methods=methods, span=self._span_from(kw))
+        return StructStmt(name=name.lexeme, fields=fields, methods=methods, location=self._span_from(kw))
 
     def _enum_declaration(self):
         """Parse: ikindi name kora variants iherezo"""
@@ -344,7 +361,11 @@ class Parser:
         )
 
         variants = []
-        while not self._check(TokenType.KW_IHEREZO) and not self._at_end:
+        while not self._at_end:
+            if self._match(TokenType.NEWLINE):
+                continue
+            if self._check(TokenType.KW_IHEREZO):
+                break
             var_name = self._consume(
                 TokenType.IDENTIFIER,
                 "variant name",
@@ -353,7 +374,7 @@ class Parser:
             value = None
             if self._match(TokenType.EQ):
                 value = self._expression()
-            variants.append(EnumVariant(var_name, value))
+            variants.append(EnumVariant(name=var_name.lexeme, value=value))
             self._consume_newline_or_iherezo()
 
         self._consume(
@@ -362,7 +383,7 @@ class Parser:
             "Expected 'iherezo' to close enum",
         )
 
-        return EnumStmt(name=name, variants=variants, span=self._span_from(kw))
+        return EnumStmt(name=name.lexeme, variants=variants, location=self._span_from(kw))
 
     def _class_declaration(self):
         """Parse: urwego name [kugira parent] kora members iherezo"""
@@ -388,7 +409,11 @@ class Parser:
         )
 
         members = []
-        while not self._check(TokenType.KW_IHEREZO) and not self._at_end:
+        while not self._at_end:
+            if self._match(TokenType.NEWLINE):
+                continue
+            if self._check(TokenType.KW_IHEREZO):
+                break
             members.append(self._statement())
 
         self._consume(
@@ -397,7 +422,7 @@ class Parser:
             "Expected 'iherezo' to close class",
         )
 
-        return ClassStmt(name=name, parent=parent, members=members, span=self._span_from(kw))
+        return ClassStmt(name=name.lexeme, parent=parent.lexeme if parent else None, members=members, location=self._span_from(kw))
 
     def _interface_declaration(self):
         """Parse: akabuto name kora members iherezo"""
@@ -415,7 +440,11 @@ class Parser:
         )
 
         members = []
-        while not self._check(TokenType.KW_IHEREZO) and not self._at_end:
+        while not self._at_end:
+            if self._match(TokenType.NEWLINE):
+                continue
+            if self._check(TokenType.KW_IHEREZO):
+                break
             members.append(self._statement())
 
         self._consume(
@@ -424,7 +453,7 @@ class Parser:
             "Expected 'iherezo' to close interface",
         )
 
-        return InterfaceStmt(name=name, members=members, span=self._span_from(kw))
+        return InterfaceStmt(name=name.lexeme, members=members, location=self._span_from(kw))
 
     def _trait_declaration(self):
         """Parse: urubingo name kora members iherezo"""
@@ -442,7 +471,11 @@ class Parser:
         )
 
         members = []
-        while not self._check(TokenType.KW_IHEREZO) and not self._at_end:
+        while not self._at_end:
+            if self._match(TokenType.NEWLINE):
+                continue
+            if self._check(TokenType.KW_IHEREZO):
+                break
             members.append(self._statement())
 
         self._consume(
@@ -451,7 +484,7 @@ class Parser:
             "Expected 'iherezo' to close trait",
         )
 
-        return TraitStmt(name=name, members=members, span=self._span_from(kw))
+        return TraitStmt(name=name.lexeme, members=members, location=self._span_from(kw))
 
     def _import_declaration(self):
         """Parse: shyiramo path [kugira_ngo alias]"""
@@ -471,7 +504,7 @@ class Parser:
             )
 
         self._consume_newline_or_iherezo()
-        return ImportStmt(path=path, alias=alias, span=self._span_from(kw))
+        return ImportStmt(path=path.lexeme, alias=alias.lexeme if alias else None, location=self._span_from(kw))
 
     def _export_declaration(self):
         """Parse: tanga name"""
@@ -482,14 +515,19 @@ class Parser:
             "Expected name after 'tanga'",
         )
         self._consume_newline_or_iherezo()
-        return ExportStmt(name=name, span=self._span_from(kw))
+        return ExportStmt(name=name.lexeme, location=self._span_from(kw))
 
     # ── Block Statements ────────────────────────────────────────
 
     def _block_body(self, opening_token: Token) -> BlockStmt:
         """Parse block body: kora ... iherezo"""
+        self._match(TokenType.KW_KORA)
         stmts = []
-        while not self._check(TokenType.KW_IHEREZO) and not self._at_end:
+        while not self._at_end:
+            if self._match(TokenType.NEWLINE):
+                continue
+            if self._check(TokenType.KW_IHEREZO):
+                break
             stmt = self._statement()
             if stmt is not None:
                 stmts.append(stmt)
@@ -502,7 +540,8 @@ class Parser:
 
         return BlockStmt(
             statements=stmts,
-            span=SourceSpan(
+            location=SourceSpan(
+                file="<input>",
                 start_line=opening_token.line,
                 start_column=opening_token.column,
                 end_line=iherezo.line,
@@ -510,30 +549,62 @@ class Parser:
             ),
         )
 
+    def _branch_body(self, opening_token: Token, extra_stop: set = None) -> BlockStmt:
+        """Parse branch body: kora ... until cyangwa_niba/cyangwa/iherezo"""
+        self._match(TokenType.KW_KORA)
+        stop_tokens = {TokenType.KW_IHEREZO, TokenType.KW_CYANGWA, TokenType.KW_CYANGWA_NIBA}
+        if extra_stop:
+            stop_tokens |= extra_stop
+        stmts = []
+        while not self._at_end:
+            tok = self._peek()
+            if tok.type in stop_tokens:
+                break
+            if tok.type == TokenType.NEWLINE:
+                self._advance()
+                continue
+            stmt = self._statement()
+            if stmt is not None:
+                stmts.append(stmt)
+        return BlockStmt(
+            statements=stmts,
+            location=SourceSpan(
+                file="<input>",
+                start_line=opening_token.line,
+                start_column=opening_token.column,
+                end_line=0, end_column=0,
+            ),
+        )
+
     def _if_statement(self):
-        """Parse: niba cond kora body [cyangwa_niba ...] [cyangwa ...]"""
+        """Parse: niba cond kora body [cyangwa_niba ...] [cyangwa ...] [iherezo]"""
         kw = self._advance()
         condition = self._expression()
-        then_body = self._block_body(kw)
+        then_body = self._branch_body(kw)
+        self._match(TokenType.KW_IHEREZO)
 
         elifs = []
+        self._consume_newlines()
         while self._match(TokenType.KW_CYANGWA_NIBA):
             elif_kw = self._previous()
             elif_cond = self._expression()
-            elif_body = self._block_body(elif_kw)
-            elifs.append(ElifBranch(elif_cond, elif_body, self._span_from(elif_kw)))
+            elif_body = self._branch_body(elif_kw)
+            self._match(TokenType.KW_IHEREZO)
+            self._consume_newlines()
+            elifs.append(ElifBranch(condition=elif_cond, body=elif_body, location=self._span_from(elif_kw)))
 
         else_body = None
         if self._match(TokenType.KW_CYANGWA):
             else_kw = self._previous()
-            else_body = self._block_body(else_kw)
+            else_body = self._branch_body(else_kw)
+            self._match(TokenType.KW_IHEREZO)
 
         return IfStmt(
             condition=condition,
             then_branch=then_body,
             elif_branches=elifs,
             else_branch=else_body,
-            span=self._span_from(kw),
+            location=self._span_from(kw),
         )
 
     def _while_statement(self):
@@ -541,49 +612,68 @@ class Parser:
         kw = self._advance()
         condition = self._expression()
         body = self._block_body(kw)
-        return WhileStmt(condition=condition, body=body, span=self._span_from(kw))
+        return WhileStmt(condition=condition, body=body, location=self._span_from(kw))
 
     def _until_statement(self):
         """Parse: kugeza condition kora body iherezo"""
         kw = self._advance()
         condition = self._expression()
         body = self._block_body(kw)
-        return UntilStmt(condition=condition, body=body, span=self._span_from(kw))
+        return UntilStmt(condition=condition, body=body, location=self._span_from(kw))
 
     def _for_statement(self):
-        """Parse: kuri var = start kugeza end kora body iherezo"""
+        """Parse: kuri var (muri|=) start kugeza end [step]? kora body iherezo"""
         kw = self._advance()
         var = self._consume(TokenType.IDENTIFIER, "loop variable", "Expected variable name after 'kuri'")
-        self._consume(TokenType.EQ, "'='", "Expected '=' after variable name")
+        if not self._match(TokenType.EQ, TokenType.KW_MURI):
+            self._error(
+                ParseErrorCode.PARS002_MISSING_TOKEN,
+                self._peek(),
+                "'=' or 'muri'",
+                self._peek().lexeme,
+            )
         start = self._expression()
         self._consume(TokenType.KW_KUGEZA, "kugeza", "Expected 'kugeza' after start")
         end = self._expression()
 
         step = None
-        if self._match(TokenType.KW_KORA):
+        if (
+            not self._check(TokenType.KW_KORA)
+            and not self._check(TokenType.NEWLINE)
+            and not self._at_end
+        ):
             step = self._expression()
 
         body = self._block_body(kw)
-        return ForStmt(variable=var, start=start, end=end, step=step, body=body, span=self._span_from(kw))
+        return ForStmt(variable=var.lexeme, start=start, end=end, step=step, body=body, location=self._span_from(kw))
 
     def _for_each_statement(self):
-        """Parse: buri element muri iterable kora body iherezo"""
+        """Parse: buri element muri iterable [kugeza end]? kora body iherezo"""
         kw = self._advance()
         elem = self._consume(TokenType.IDENTIFIER, "element", "Expected element name after 'buri'")
         self._consume(TokenType.KW_MURI, "muri", "Expected 'muri' after element name")
         iterable = self._expression()
+
+        if self._match(TokenType.KW_KUGEZA):
+            end = self._expression()
+            body = self._block_body(kw)
+            return ForStmt(
+                variable=elem.lexeme, start=iterable, end=end, step=None,
+                body=body, location=self._span_from(kw),
+            )
+
         body = self._block_body(kw)
-        return ForEachStmt(element=elem, iterable=iterable, body=body, span=self._span_from(kw))
+        return ForEachStmt(element=elem.lexeme, iterable=iterable, body=body, location=self._span_from(kw))
 
     def _break_statement(self):
         kw = self._advance()
         self._consume_newline_or_iherezo()
-        return BreakStmt(keyword=kw, span=self._span_from(kw))
+        return BreakStmt( location=self._span_from(kw))
 
     def _continue_statement(self):
         kw = self._advance()
         self._consume_newline_or_iherezo()
-        return ContinueStmt(keyword=kw, span=self._span_from(kw))
+        return ContinueStmt( location=self._span_from(kw))
 
     def _return_statement(self):
         kw = self._advance()
@@ -591,46 +681,69 @@ class Parser:
         if not self._check(TokenType.NEWLINE) and not self._check(TokenType.KW_IHEREZO) and not self._at_end:
             value = self._expression()
         self._consume_newline_or_iherezo()
-        return ReturnStmt(keyword=kw, value=value, span=self._span_from(kw))
+        return ReturnStmt( value=value, location=self._span_from(kw))
 
     def _throw_statement(self):
         kw = self._advance()
         value = self._expression()
         self._consume_newline_or_iherezo()
-        return ThrowStmt(keyword=kw, value=value, span=self._span_from(kw))
+        return ThrowStmt( value=value, location=self._span_from(kw))
 
     def _try_statement(self):
-        """Parse: kora body kubika var body [ikinyoma body]"""
+        """Parse: kora body kubika var body [ikinyoma body] iherezo"""
         kw = self._advance()
-        try_body = self._block_body(kw)
+        try_body = self._branch_body(kw, {TokenType.KW_KUBIKA, TokenType.KW_IKINYOMA})
 
         catch_var = None
         catch_body = None
         if self._match(TokenType.KW_KUBIKA):
             catch_var = self._consume(TokenType.IDENTIFIER, "catch variable", "Expected variable name after 'kubika'")
-            catch_body = self._block_body(kw)
+            catch_body = self._branch_body(kw, {TokenType.KW_IKINYOMA})
 
         finally_body = None
         if self._match(TokenType.KW_IKINYOMA):
-            finally_body = self._block_body(kw)
+            finally_body = self._branch_body(kw)
+
+        self._consume(TokenType.KW_IHEREZO, "iherezo", "Expected 'iherezo' to close try block")
 
         return TryStmt(
             try_body=try_body,
-            catch_var=catch_var,
+            catch_var=catch_var.lexeme if catch_var else None,
             catch_body=catch_body,
             finally_body=finally_body,
-            span=self._span_from(kw),
+            location=self._span_from(kw),
         )
 
     def _empty_statement(self):
         kw = self._advance()
         self._consume_newline_or_iherezo()
-        return BlockStmt(statements=[], span=self._span_from(kw))
+        return BlockStmt(statements=[], location=self._span_from(kw))
 
     def _expression_statement(self):
         expr = self._expression()
         self._consume_newline_or_iherezo()
-        return ExpressionStmt(expression=expr, span=expr.span)
+        return ExpressionStmt(expression=expr, location=expr.span)
+
+    def _print_statement(self):
+        """Parse a print statement: andika <expr>"""
+        kw = self._advance()
+
+        if self._at_end or self._peek().type in (TokenType.NEWLINE, TokenType.KW_IHEREZO):
+            self._error(
+                ParseErrorCode.PARS003_INVALID_EXPRESSION,
+                self._peek(),
+                "expression",
+                "end of statement",
+            )
+            self._consume_newline_or_iherezo()
+            return None
+
+        expr = self._expression()
+        self._consume_newline_or_iherezo()
+
+        callee = IdentifierExpr(name="andika", location=self._span_from(kw))
+        call = CallExpr(callee=callee, arguments=[expr], location=expr.span)
+        return ExpressionStmt(expression=call, location=expr.span)
 
     # ── Expression Parsing (Pratt) ─────────────────────────────
 
@@ -641,10 +754,19 @@ class Parser:
         """Pratt parsing: parse expression with minimum precedence."""
         left = self._prefix()
 
-        while not self._at_end and min_prec <= self._infix_precedence(self._peek().type):
+        while not self._at_end:
+            prec = self._infix_precedence(self._peek().type)
+            if self._is_word_operator(self._peek()):
+                prec = Precedence.COMPARISON
+            if min_prec > prec:
+                break
             left = self._infix(left)
 
         return left
+
+    def _is_word_operator(self, tok: Token) -> bool:
+        """Check if a token is a word comparison operator."""
+        return tok.type == TokenType.IDENTIFIER and tok.lexeme in WORD_OPERATORS
 
     def _prefix(self):
         """Parse prefix expression."""
@@ -653,56 +775,61 @@ class Parser:
         # Literals
         if tok.type == TokenType.INTEGER:
             self._advance()
-            return LiteralExpr(value=tok.value, token=tok, span=SourceSpan.from_token(tok))
+            return LiteralExpr(value=tok.value, token_type=tok.type, location=SourceSpan.from_token(tok))
         if tok.type == TokenType.FLOAT:
             self._advance()
-            return LiteralExpr(value=tok.value, token=tok, span=SourceSpan.from_token(tok))
+            return LiteralExpr(value=tok.value, token_type=tok.type, location=SourceSpan.from_token(tok))
         if tok.type == TokenType.STRING:
             self._advance()
-            return LiteralExpr(value=tok.value, token=tok, span=SourceSpan.from_token(tok))
+            return LiteralExpr(value=tok.value, token_type=tok.type, location=SourceSpan.from_token(tok))
         if tok.type == TokenType.TRIPLE_STRING:
             self._advance()
-            return LiteralExpr(value=tok.value, token=tok, span=SourceSpan.from_token(tok))
+            return LiteralExpr(value=tok.value, token_type=tok.type, location=SourceSpan.from_token(tok))
         if tok.type == TokenType.CHARACTER:
             self._advance()
-            return LiteralExpr(value=tok.value, token=tok, span=SourceSpan.from_token(tok))
+            return LiteralExpr(value=tok.value, token_type=tok.type, location=SourceSpan.from_token(tok))
         if tok.type == TokenType.BOOLEAN_TRUE or tok.type == TokenType.KW_TRUE_EN:
             self._advance()
-            return LiteralExpr(value=True, token=tok, span=SourceSpan.from_token(tok))
+            return LiteralExpr(value=True, token_type=tok.type, location=SourceSpan.from_token(tok))
         if tok.type == TokenType.BOOLEAN_FALSE or tok.type == TokenType.KW_FALSE_EN:
             self._advance()
-            return LiteralExpr(value=False, token=tok, span=SourceSpan.from_token(tok))
+            return LiteralExpr(value=False, token_type=tok.type, location=SourceSpan.from_token(tok))
         if tok.type == TokenType.NULL or tok.type == TokenType.KW_NULL_EN:
             self._advance()
-            return LiteralExpr(value=None, token=tok, span=SourceSpan.from_token(tok))
+            return LiteralExpr(value=None, token_type=tok.type, location=SourceSpan.from_token(tok))
 
-        # Identifier
+        # Identifier (including keywords used as identifiers)
         if tok.type == TokenType.IDENTIFIER:
             self._advance()
-            return IdentifierExpr(name=tok, span=SourceSpan.from_token(tok))
+            return IdentifierExpr(name=tok.lexeme, location=SourceSpan.from_token(tok))
+
+        # Keywords allowed as identifiers in expression context
+        if tok.type in (TokenType.KW_UBWOKO, TokenType.KW_KUBIKA, TokenType.KW_IKINYOMA, TokenType.KW_IHEREZO):
+            self._advance()
+            return IdentifierExpr(name=tok.lexeme, location=SourceSpan.from_token(tok))
 
         # Unary operators
         if tok.type in (TokenType.MINUS, TokenType.BANG, TokenType.TILDE, TokenType.KW_SI):
             self._advance()
             right = self._parse_precedence(Precedence.UNARY)
-            return UnaryExpr(operator=tok, right=right, span=self._span_from(tok))
+            return UnaryExpr(operator=tok.lexeme, right=right, location=self._span_from(tok))
 
         # Self/Super
         if tok.type == TokenType.KW_SELF:
             self._advance()
-            return SelfExpr(keyword=tok, span=SourceSpan.from_token(tok))
+            return SelfExpr( location=SourceSpan.from_token(tok))
         if tok.type == TokenType.KW_SUPER:
             self._advance()
             self._consume(TokenType.DOT, "'.'", "Expected '.' after 'super'")
             method = self._consume(TokenType.IDENTIFIER, "method name", "Expected method name after 'super.'")
-            return SuperExpr(keyword=tok, method=method, span=self._span_from(tok))
+            return SuperExpr(method=method.lexeme, location=self._span_from(tok))
 
         # Grouping
         if tok.type == TokenType.LPAREN:
             self._advance()
             expr = self._expression()
             self._consume(TokenType.RPAREN, "')'", "Expected ')' after expression")
-            return GroupingExprWrapper(expr, span=self._span_from(tok))
+            return GroupingExprWrapper(expr, location=self._span_from(tok))
 
         # List literal
         if tok.type == TokenType.LBRACKET:
@@ -731,7 +858,7 @@ class Parser:
             tok.lexeme,
         )
         self._advance()
-        return LiteralExpr(value=None, token=tok, span=SourceSpan.from_token(tok))
+        return LiteralExpr(value=None, token_type=tok.type, location=SourceSpan.from_token(tok))
 
     def _infix(self, left):
         """Parse infix expression."""
@@ -762,6 +889,10 @@ class Parser:
             TokenType.AMP, TokenType.PIPE, TokenType.CARET,
             TokenType.LT_LT, TokenType.GT_GT, TokenType.GT_GT_GT,
         ):
+            return self._binary_expr(left)
+
+        # Word comparison operators (irenze, munsi, munsi_ya)
+        if self._is_word_operator(tok):
             return self._binary_expr(left)
 
         # Call
@@ -819,38 +950,41 @@ class Parser:
 
     def _binary_expr(self, left):
         op = self._advance()
+        prec = self._infix_precedence(op.type)
+        if self._is_word_operator(op):
+            prec = Precedence.COMPARISON
         # Right-associative for **
         if op.type == TokenType.STAR_STAR:
             right = self._parse_precedence(Precedence.POWER)
         else:
-            right = self._parse_precedence(self._infix_precedence(op.type) + 1)
-        return BinaryExpr(left=left, operator=op, right=right, span=self._span_from_tokens(left.span, right.span))
+            right = self._parse_precedence(prec + 1)
+        return BinaryExpr(left=left, operator=op.lexeme, right=right, location=self._span_from_tokens(left.span, right.span))
 
     def _logical_expr(self, left):
         op = self._advance()
         right = self._parse_precedence(self._infix_precedence(op.type) + 1)
-        return LogicalExpr(left=left, operator=op, right=right, span=self._span_from_tokens(left.span, right.span))
+        return LogicalExpr(left=left, operator=op.lexeme, right=right, location=self._span_from_tokens(left.span, right.span))
 
     def _assignment_expr(self, left):
         eq = self._advance()
         value = self._parse_precedence(Precedence.ASSIGNMENT)
-        return AssignmentExpr(target=left, value=value, span=self._span_from_tokens(left.span, value.span))
+        return AssignmentExpr(target=left, value=value, location=self._span_from_tokens(left.span, value.span))
 
     def _compound_assignment_expr(self, left):
         op = self._advance()
         value = self._parse_precedence(Precedence.ASSIGNMENT)
-        return CompoundAssignmentExpr(target=left, operator=op, value=value, span=self._span_from_tokens(left.span, value.span))
+        return CompoundAssignmentExpr(target=left, operator=op.lexeme, value=value, location=self._span_from_tokens(left.span, value.span))
 
     def _call_expr(self, callee):
         paren = self._advance()
         args = self._arguments()
         self._consume(TokenType.RPAREN, "')'", "Expected ')' after arguments")
-        return CallExpr(callee=callee, paren=paren, arguments=args, span=self._span_from_tokens(callee.span, SourceSpan.from_token(self._previous())))
+        return CallExpr(callee=callee, arguments=args, location=self._span_from_tokens(callee.span, SourceSpan.from_token(self._previous())))
 
     def _get_expr(self, obj):
         dot = self._advance()
         name = self._consume(TokenType.IDENTIFIER, "property name", "Expected property name after '.'")
-        return GetExpr(object=obj, name=name, span=self._span_from_tokens(obj.span, SourceSpan.from_token(name)))
+        return GetExpr(object=obj, property=name.lexeme, location=self._span_from_tokens(obj.span, SourceSpan.from_token(name)))
 
     def _index_expr(self, obj):
         bracket = self._advance()
@@ -861,10 +995,10 @@ class Parser:
             if not self._check(TokenType.RBRACKET):
                 end = self._expression()
             self._consume(TokenType.RBRACKET, "']'", "Expected ']' after slice")
-            return SliceExpr(object=obj, start=idx, end=end, bracket=bracket, span=self._span_from_tokens(obj.span, SourceSpan.from_token(self._previous())))
+            return SliceExpr(object=obj, start=idx, end=end, location=self._span_from_tokens(obj.span, SourceSpan.from_token(self._previous())))
 
         self._consume(TokenType.RBRACKET, "']'", "Expected ']' after index")
-        return IndexExpr(object=obj, index=idx, bracket=bracket, span=self._span_from_tokens(obj.span, SourceSpan.from_token(self._previous())))
+        return IndexExpr(object=obj, index=idx, location=self._span_from_tokens(obj.span, SourceSpan.from_token(self._previous())))
 
     def _constructor(self):
         kw = self._advance()
@@ -872,7 +1006,7 @@ class Parser:
         paren = self._consume(TokenType.LPAREN, "'('", "Expected '(' after class name")
         args = self._arguments()
         self._consume(TokenType.RPAREN, "')'", "Expected ')' after arguments")
-        return ConstructorExpr(class_name=name, paren=paren, arguments=args, span=self._span_from(kw))
+        return ConstructorExpr(class_name=name.lexeme, arguments=args, location=self._span_from(kw))
 
     def _list_literal(self):
         bracket = self._advance()
@@ -882,7 +1016,7 @@ class Parser:
             while self._match(TokenType.COMMA):
                 elements.append(self._expression())
         self._consume(TokenType.RBRACKET, "']'", "Expected ']' after list")
-        return ListExpr(elements=elements, span=self._span_from(SourceSpan.from_token(bracket)))
+        return ListExpr(elements=elements, location=SourceSpan.from_token(bracket))
 
     def _dict_literal(self):
         brace = self._advance()
@@ -901,21 +1035,25 @@ class Parser:
                 keys.append(k)
                 values.append(v)
         self._consume(TokenType.RBRACE, "'}'", "Expected '}' after dict")
-        return DictExpr(keys=keys, values=values, span=self._span_from(SourceSpan.from_token(brace)))
+        return DictExpr(keys=keys, values=values, location=SourceSpan.from_token(brace))
 
     def _block_expression(self):
         kw = self._advance()
         stmts = []
         result = None
 
-        while not self._check(TokenType.KW_IHEREZO) and not self._at_end:
+        while not self._at_end:
+            if self._match(TokenType.NEWLINE):
+                continue
+            if self._check(TokenType.KW_IHEREZO):
+                break
             if self._peek_next_type() == TokenType.KW_IHEREZO:
                 result = self._expression()
             else:
                 stmts.append(self._statement())
 
         self._consume(TokenType.KW_IHEREZO, "iherezo", "Expected 'iherezo' to close block expression")
-        return BlockExpr(statements=stmts, result=result, span=self._span_from(kw))
+        return BlockExpr(statements=stmts, location=self._span_from(kw))
 
     def _if_expression(self):
         kw = self._advance()
@@ -926,14 +1064,14 @@ class Parser:
         else_expr = None
         if self._match(TokenType.KW_CYANGWA):
             else_expr = self._expression()
-        return IfExpr(condition=condition, then_branch=then_expr, else_branch=else_expr, span=self._span_from(kw))
+        return IfExpr(condition=condition, then_branch=then_expr, else_branch=else_expr, location=self._span_from(kw))
 
     def _lambda_expr(self):
         kw = self._advance()
         params = self._parameters()
         self._consume(TokenType.FAT_ARROW, "'=>'", "Expected '=>' after lambda parameters")
         body = self._expression()
-        return LambdaExpr(parameters=params, body=body, arrow=kw, span=self._span_from(kw))
+        return LambdaExpr(parameters=params, body=body, location=self._span_from(kw))
 
     # ── Helpers ─────────────────────────────────────────────────
 
@@ -955,7 +1093,7 @@ class Parser:
             default = None
             if self._match(TokenType.EQ):
                 default = self._expression()
-            params.append(FunctionParam(name, type_ann, default))
+            params.append(FunctionParam(name=name.lexeme, type_annotation=type_ann.lexeme if type_ann else None, default=default))
             while self._match(TokenType.COMMA):
                 name = self._consume(TokenType.IDENTIFIER, "parameter name", "Expected parameter name")
                 type_ann = None
@@ -964,12 +1102,17 @@ class Parser:
                 default = None
                 if self._match(TokenType.EQ):
                     default = self._expression()
-                params.append(FunctionParam(name, type_ann, default))
+                params.append(FunctionParam(name=name.lexeme, type_annotation=type_ann.lexeme if type_ann else None, default=default))
         return params
 
     def _consume_newline_or_iherezo(self):
         """Consume optional newline."""
         self._match(TokenType.NEWLINE)
+
+    def _consume_newlines(self):
+        """Consume all consecutive newlines."""
+        while self._match(TokenType.NEWLINE):
+            pass
 
     # ── Token Operations ───────────────────────────────────────
 
@@ -991,9 +1134,12 @@ class Parser:
             self._pos += 1
         return tok
 
+    def _check(self, token_type: TokenType) -> bool:
+        return not self._at_end and self._peek().type == token_type
+
     @property
     def _at_end(self) -> bool:
-        return self._pos >= len(self._tokens)
+        return self._pos >= len(self._tokens) or self._peek().type == TokenType.EOF
 
     def _match(self, *types: TokenType) -> bool:
         for t in types:
@@ -1030,6 +1176,7 @@ class Parser:
 
     def _span_between(self, start: Token, end: Token) -> SourceSpan:
         return SourceSpan(
+            file="<input>",
             start_line=start.line,
             start_column=start.column,
             end_line=end.line,

@@ -143,6 +143,14 @@ class IVMChunk:
         return self._instructions
 
     @property
+    def code(self) -> list[IVMInstruction]:
+        return self._instructions
+
+    @code.setter
+    def code(self, value: list[IVMInstruction]) -> None:
+        self._instructions = value
+
+    @property
     def constants(self) -> list[Any]:
         return self._constants
 

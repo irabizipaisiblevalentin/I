@@ -191,6 +191,10 @@ class ASTNode(ABC):
     metadata: Dict[str, Any] = field(default_factory=dict, repr=False)
 
     @property
+    def span(self) -> SourceLocation:
+        return self.location
+
+    @property
     def node_type(self) -> NodeType:
         """Get the node type."""
         raise NotImplementedError

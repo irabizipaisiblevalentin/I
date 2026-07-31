@@ -38,6 +38,10 @@ class OptimizationContext:
         "_iteration",
         "_max_iterations",
         "_changed",
+        "_debug_enabled",
+        "_verify_ir",
+        "_dump_ir",
+        "_transformations",
     )
 
     def __init__(
@@ -56,6 +60,10 @@ class OptimizationContext:
         self._iteration = 0
         self._max_iterations = 4
         self._changed = False
+        self._debug_enabled = False
+        self._verify_ir = True
+        self._dump_ir = False
+        self._transformations: list[tuple[str, str]] = []
 
     @property
     def module(self) -> IRModule:
@@ -89,6 +97,30 @@ class OptimizationContext:
     def changed(self) -> bool:
         return self._changed
 
+    @property
+    def debug_enabled(self) -> bool:
+        return self._debug_enabled
+
+    @debug_enabled.setter
+    def debug_enabled(self, value: bool) -> None:
+        self._debug_enabled = bool(value)
+
+    @property
+    def verify_ir(self) -> bool:
+        return self._verify_ir
+
+    @verify_ir.setter
+    def verify_ir(self, value: bool) -> None:
+        self._verify_ir = bool(value)
+
+    @property
+    def dump_ir(self) -> bool:
+        return self._dump_ir
+
+    @dump_ir.setter
+    def dump_ir(self, value: bool) -> None:
+        self._dump_ir = bool(value)
+
     def increment_pass_count(self) -> None:
         self._pass_count += 1
 
@@ -100,6 +132,17 @@ class OptimizationContext:
 
     def reset_changed(self) -> None:
         self._changed = False
+
+    def record_transformation(self, pass_name: str, detail: str) -> None:
+        self._transformations.append((pass_name, detail))
+
+    def transformation_log(self) -> str:
+        if not self._transformations:
+            return "(no transformations recorded)"
+        lines = []
+        for pass_name, detail in self._transformations:
+            lines.append(f"[{pass_name}] {detail}")
+        return "\n".join(lines)
 
     def get_option(self, key: str, default: Any = None) -> Any:
         return self._options.get(key, default)
@@ -116,4 +159,8 @@ class OptimizationContext:
         )
         ctx._options = dict(self._options)
         ctx._max_iterations = self._max_iterations
+        ctx._debug_enabled = self._debug_enabled
+        ctx._verify_ir = self._verify_ir
+        ctx._dump_ir = self._dump_ir
+        ctx._transformations = list(self._transformations)
         return ctx

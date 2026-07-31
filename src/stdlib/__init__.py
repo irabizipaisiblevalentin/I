@@ -14,7 +14,7 @@ Modules are organized in layers:
   - Meta: package, compiler, vm
 """
 
-__version__ = "0.1.0"
+__version__ = "1.0.0"
 __all__ = [
     "text", "math", "numbers", "collections", "random", "unicode",
     "time", "date", "io", "paths", "filesystem", "json", "csv", "xml", "yaml",

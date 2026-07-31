@@ -10,8 +10,31 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Dict, List, Optional, Set
 
-from .symbols import Symbol, SymbolKind, Visibility, make_module
+from .symbols import (
+    Symbol, SymbolKind, Visibility, make_module,
+    make_builtin_function, TypeDescriptor, TYPE_INT, TYPE_STRING, TYPE_ANY,
+)
 from .errors import SemanticErrorCode, SemanticErrorCollection, SourceLocation
+
+
+# Names exported by each built-in standard-library module.
+_STDLIB_EXPORTS: Dict[str, List[str]] = {
+    'urubuga': [
+        'andika', 'andika_nta_umurongo', 'soma_umurongo',
+        'soma_dosive', 'andika_dosive', 'dosive_ribaho',
+        'komandi_zemerera', 'guma', 'igihe', 'ibidukikije',
+    ],
+    'text': ['uburebure', 'ice', 'ntoya', 'nini', 'koma'],
+    'math': ['pi', 'ubusamo', 'gusonera', 'kubika'],
+    'string': ['uburebure', 'ice', 'komeza'],
+    'list': ['uburebure', 'injiza', 'kuraho'],
+    'io': ['soma', 'andika'],
+    'std': [],
+}
+
+
+def _builtin_export_symbol(name: str) -> Symbol:
+    return make_builtin_function(name, [TYPE_ANY], TYPE_ANY)
 
 
 @dataclass
@@ -72,8 +95,10 @@ class ImportResolver:
         module_info = self._modules.get(path)
         if module_info is None:
             # Try built-in modules
-            if path in ('std', 'io', 'math', 'string', 'list'):
+            if path in _STDLIB_EXPORTS:
                 module_info = self.register_module(path, location)
+                for export_name in _STDLIB_EXPORTS[path]:
+                    module_info.exports[export_name] = _builtin_export_symbol(export_name)
             else:
                 diagnostics.error(
                     SemanticErrorCode.SEM400_MODULE_NOT_FOUND,

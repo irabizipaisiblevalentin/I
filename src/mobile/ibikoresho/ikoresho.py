@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from abc import ABC, abstractmethod
+from abc import ABC
 from typing import Any, Optional
 
 
@@ -152,7 +152,6 @@ class Ikoresho(ABC):
             self._children.remove(child)
             child._parent = None
 
-    @abstractmethod
     def render(self) -> Any:
         raise NotImplementedError
 

@@ -23,9 +23,15 @@ def zip_create(path: str, files: List[str], compression: int = zipfile.ZIP_DEFLA
 
 
 def zip_extract(path: str, dest: str = ".") -> None:
-    """Extract a ZIP archive."""
+    """Extract a ZIP archive safely (rejects path traversal members)."""
+    dest_abs = os.path.abspath(dest)
     with zipfile.ZipFile(path, "r") as zf:
-        zf.extractall(dest)
+        for member in zf.infolist():
+            name = member.filename.replace("\\", "/")
+            target = os.path.abspath(os.path.join(dest_abs, name))
+            if not (target == dest_abs or target.startswith(dest_abs + os.sep)):
+                raise ValueError(f"unsafe archive member: {member.filename}")
+            zf.extract(member, dest)
 
 
 def zip_list(path: str) -> List[str]:
@@ -52,9 +58,19 @@ def tar_create(path: str, files: List[str], mode: str = "w:gz") -> None:
 
 
 def tar_extract(path: str, dest: str = ".") -> None:
-    """Extract a tar archive."""
+    """Extract a tar archive safely (rejects path traversal and links)."""
+    dest_abs = os.path.abspath(dest)
     with tarfile.open(path, "r:*") as tf:
-        tf.extractall(dest)
+        members = []
+        for member in tf.getmembers():
+            name = member.name.replace("\\", "/")
+            target = os.path.abspath(os.path.join(dest_abs, name))
+            if not (target == dest_abs or target.startswith(dest_abs + os.sep)):
+                raise ValueError(f"unsafe archive member: {member.name}")
+            if member.issym() or member.islnk():
+                raise ValueError(f"unsafe archive link: {member.name}")
+            members.append(member)
+        tf.extractall(dest, members=members)
 
 
 def tar_list(path: str) -> List[str]:

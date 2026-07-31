@@ -4,5 +4,5 @@ isoko manages packages, workspaces, dependencies, registries, and
 the complete developer workflow for the I programming language.
 """
 
-__version__ = "0.1.0"
+__version__ = "1.0.0"
 __all__ = ["manifest", "semver", "resolver", "registry", "cli"]

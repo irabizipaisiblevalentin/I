@@ -37,13 +37,10 @@ class CommonSubexpressionEliminationPass(Pass):
         return PassResult(changed=changed, impact=impact.impact)
 
     def _replace_uses(self, bb, old_name: str, new_name: str) -> None:
-        from compiler.ir.values import IntConstant, FloatConstant, BoolConstant
         for inst in bb.instructions:
-            for attr in ('a', 'b', 'lhs', 'rhs', 'condition', 'value', 'ptr'):
-                val = getattr(inst, attr, None)
-                if val is not None and hasattr(val, 'name') and val.name == old_name:
-                    replacement = _make_proxy(old_name, new_name)
-                    object.__setattr__(inst, attr, replacement)
+            for i, op in enumerate(inst.operands):
+                if hasattr(op, "name") and op.name == old_name:
+                    inst.set_operand(i, _make_proxy(new_name))
 
     def _expr_key(self, inst) -> tuple | None:
         if isinstance(inst, (Add, Sub, Mul)):
@@ -78,5 +75,5 @@ class _NameProxy:
         return self._name
 
 
-def _make_proxy(old_name: str, new_name: str) -> _NameProxy:
+def _make_proxy(new_name: str) -> _NameProxy:
     return _NameProxy(new_name)
