@@ -1,4 +1,0 @@
-{"event_id": "sec_2d30421d8b2d", "event_type": "prompt_injection", "severity": "high", "message": "Content policy violation detected", "source": "", "user": "", "model_id": "", "timestamp": 1785304840.7117736}
-{"event_id": "sec_649672e1c303", "event_type": "audit_log", "severity": "low", "message": "test", "source": "", "user": "", "model_id": "", "timestamp": 1785304840.7129207}
-{"event_id": "sec_2d166ce9da78", "event_type": "prompt_injection", "severity": "high", "message": "Content policy violation detected", "source": "", "user": "", "model_id": "", "timestamp": 1785304882.2920012}
-{"event_id": "sec_33af7346cddf", "event_type": "audit_log", "severity": "low", "message": "test", "source": "", "user": "", "model_id": "", "timestamp": 1785304882.2934856}

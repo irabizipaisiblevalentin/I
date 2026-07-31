@@ -176,7 +176,7 @@ A simple project looks like this:
 
 ```
 my-project/
-├── isoko.yaml          # project manifest (created by `isoko new`)
+├── ilang.toml          # project manifest (created by `isoko init`)
 ├── src/
 │   └── main.i          # entry point
 └── tests/

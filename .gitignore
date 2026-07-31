@@ -11,3 +11,15 @@ build/
 *.so
 .DS_Store
 Thumbs.db
+
+# Local state and runtime artifacts
+.istudio-workspace
+test.wal
+*.wal
+logs/
+cache/
+.hypothesis/
+.coverage
+htmlcov/
+.pytest_cache/
+.ruff_cache/

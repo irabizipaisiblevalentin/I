@@ -20,7 +20,8 @@ class Template:
         created = []
         for rel_path, content in self.files.items():
             rendered = content.replace("{{project_name}}", project_name)
-            full_path = os.path.join(project_dir, rel_path)
+            rendered_path = rel_path.replace("{{project_name}}", project_name)
+            full_path = os.path.join(project_dir, rendered_path)
             os.makedirs(os.path.dirname(full_path), exist_ok=True)
             with open(full_path, "w", encoding="utf-8") as f:
                 f.write(rendered)
@@ -43,15 +44,15 @@ _CONSOLE.files = {
   },
   "dependencies": {},
   "scripts": {
-    "run": "i run lib/{{project_name}}.i",
+    "run": "lib/{{project_name}}.i",
     "test": "i test"
   }
 }""",
-    "lib/{{project_name}}.i": """// {{project_name}} — Entry point
-andika("Hello, World!")
+    "lib/{{project_name}}.i": """# {{project_name}} — Entry point
+andika "Hello, World!"
 """,
-    "tests/test_{{project_name}}.i": """// Tests for {{project_name}}
-// Write tests here
+    "tests/test_{{project_name}}.i": """# Tests for {{project_name}}
+# Write tests here
 """,
 }
 
@@ -71,10 +72,10 @@ _LIBRARY.files = {
     "bench": "i bench"
   }
 }""",
-    "lib/{{project_name}}.i": """// {{project_name}} — Library
-// Export public API here
+    "lib/{{project_name}}.i": """# {{project_name}} — Library
+# Export public API here
 """,
-    "tests/test_{{project_name}}.i": """// Tests for {{project_name}}
+    "tests/test_{{project_name}}.i": """# Tests for {{project_name}}
 """,
 }
 
@@ -91,14 +92,14 @@ _WEB_API.files = {
     "isoko-web": ">=0.1.0"
   },
   "scripts": {
-    "run": "i run lib/{{project_name}}.i",
-    "dev": "i run --watch lib/{{project_name}}.i"
+    "run": "lib/{{project_name}}.i",
+    "dev": "lib/{{project_name}}.i"
   }
 }""",
-    "lib/{{project_name}}.i": """// {{project_name}} — Web API
-andika("Starting {{project_name}} API server...")
+    "lib/{{project_name}}.i": """# {{project_name}} — Web API
+andika "Starting {{project_name}} API server..."
 """,
-    "tests/test_{{project_name}}.i": """// Tests for {{project_name}}
+    "tests/test_{{project_name}}.i": """# Tests for {{project_name}}
 """,
 }
 
@@ -115,7 +116,7 @@ _AI_PROJECT.files = {
     "isoko-ml": ">=0.1.0"
   }
 }""",
-    "lib/{{project_name}}.i": """// {{project_name}} — AI Project
+    "lib/{{project_name}}.i": """# {{project_name}} — AI Project
 """,
     "data/.gitkeep": "",
 }
@@ -133,7 +134,7 @@ _GAME.files = {
     "isoko-gfx": ">=0.1.0"
   }
 }""",
-    "lib/{{project_name}}.i": """// {{project_name}} — Game
+    "lib/{{project_name}}.i": """# {{project_name}} — Game
 """,
     "assets/.gitkeep": "",
 }
@@ -151,10 +152,10 @@ _DESKTOP.files = {
     "isoko-gui": ">=0.1.0"
   },
   "scripts": {
-    "run": "i run lib/{{project_name}}.i"
+    "run": "lib/{{project_name}}.i"
   }
 }""",
-    "lib/{{project_name}}.i": """// {{project_name}} — Desktop Application
+    "lib/{{project_name}}.i": """# {{project_name}} — Desktop Application
 """,
     "assets/.gitkeep": "",
 }
@@ -172,10 +173,10 @@ _MOBILE.files = {
     "isoko-mobile": ">=0.1.0"
   },
   "scripts": {
-    "run": "i run lib/{{project_name}}.i"
+    "run": "lib/{{project_name}}.i"
   }
 }""",
-    "lib/{{project_name}}.i": """// {{project_name}} — Mobile Application
+    "lib/{{project_name}}.i": """# {{project_name}} — Mobile Application
 """,
     "platforms/.gitkeep": "",
 }
@@ -193,11 +194,11 @@ _WEBSITE.files = {
     "isoko-web": ">=0.1.0"
   },
   "scripts": {
-    "dev": "i run --watch lib/{{project_name}}.i",
-    "build": "i build --release"
+    "dev": "lib/{{project_name}}.i",
+    "build": "python -m compiler.compiler lib/{{project_name}}.i"
   }
 }""",
-    "lib/{{project_name}}.i": """// {{project_name}} — Website
+    "lib/{{project_name}}.i": """# {{project_name}} — Website
 """,
     "static/.gitkeep": "",
     "templates/.gitkeep": "",
@@ -216,11 +217,11 @@ _CLOUD.files = {
     "isoko-cloud": ">=0.1.0"
   },
   "scripts": {
-    "run": "i run lib/{{project_name}}.i",
+    "run": "lib/{{project_name}}.i",
     "deploy": "ideploy push"
   }
 }""",
-    "lib/{{project_name}}.i": """// {{project_name}} — Cloud Service
+    "lib/{{project_name}}.i": """# {{project_name}} — Cloud Service
 """,
 }
 
@@ -238,7 +239,7 @@ _EMBEDDED.files = {
     "target": "embedded"
   }
 }""",
-    "lib/{{project_name}}.i": """// {{project_name}} — Embedded Project
+    "lib/{{project_name}}.i": """# {{project_name}} — Embedded Project
 """,
 }
 
@@ -256,7 +257,7 @@ _OS.files = {
     "target": "bare-metal"
   }
 }""",
-    "kernel/{{project_name}}.i": """// {{project_name}} — Kernel
+    "kernel/{{project_name}}.i": """# {{project_name}} — Kernel
 """,
     "drivers/.gitkeep": "",
     "boot/.gitkeep": "",
@@ -278,9 +279,9 @@ _FRAMEWORK.files = {
     "bench": "i bench"
   }
 }""",
-    "lib/{{project_name}}.i": """// {{project_name}} — Framework
+    "lib/{{project_name}}.i": """# {{project_name}} — Framework
 """,
-    "tests/test_{{project_name}}.i": """// Tests for {{project_name}}
+    "tests/test_{{project_name}}.i": """# Tests for {{project_name}}
 """,
     "examples/.gitkeep": "",
 }

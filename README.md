@@ -2,51 +2,40 @@
 
 <div align="center">
 
-**The world's first professional programming language designed around Kinyarwanda**
+**A programming language designed around Kinyarwanda**
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Build Status](https://img.shields.io/github/actions/workflow/status/i-lang/i-lang/ci.yml?branch=main)](https://github.com/i-lang/i-lang/actions)
-[![codecov](https://codecov.io/gh/i-lang/i-lang/branch/main/graph/badge.svg)](https://codecov.io/gh/i-lang/i-lang)
-[![Documentation](https://img.shields.io/badge/docs-latest-blue.svg)](https://docs.i-lang.rw)
-[![Gitter](https://badges.gitter.im/i-lang/community.svg)](https://gitter.im/i-lang/community)
 
-[Website](https://i-lang.rw) • [Documentation](https://docs.i-lang.rw) • [Examples](https://github.com/i-lang/examples) • [Community](https://community.i-lang.rw)
+**v1.0.0** — a stable, documented, tested release of the reference toolchain.
 
 </div>
 
 ## Table of Contents
 
 - [Mission](#mission)
-- [Vision](#vision)
-- [Quick Start](#quick-start)
+- [Installation](#installation)
+- [Your First Program](#your-first-program)
 - [Language Overview](#language-overview)
 - [Project Structure](#project-structure)
+- [Documentation](#documentation)
+- [Examples](#examples)
 - [Architecture](#architecture)
-- [Roadmap](#roadmap)
+- [Status & Roadmap](#status--roadmap)
 - [Contributing](#contributing)
-- [Governance](#governance)
-- [Security](#security)
 - [License](#license)
 
 ## Mission
 
-Create a professional programming language with natural Kinyarwanda syntax that empowers millions of African developers to build world-class software in their native language, serving as a foundation for African technological independence.
+Create a professional programming language with natural Kinyarwanda syntax that
+empowers millions of African developers to build world-class software in their
+native language, serving as a foundation for African technological independence.
 
-## Vision
+## Installation
 
-A language that:
-- **Feels like natural Kinyarwanda** while remaining suitable for professional development
-- **Serves as a foundation** for African technological independence
-- **Enables developers** to express complex ideas with clarity and precision
-- **Stands the test of time** for the next 30 years and beyond
-- **Supports self-hosting** by eventually being written in I itself
-
-## Quick Start
-
-### Installation
+The reference implementation is a Python package. Python 3.10+ is required.
 
 ```bash
-# Install the I compiler
+# Install the I toolchain
 pip install i-lang
 
 # Or build from source
@@ -55,7 +44,13 @@ cd i-lang
 python -m pip install -e .
 ```
 
-### Your First Program
+This installs:
+
+- the `i` compiler CLI (`i hello.i -r`, `i --version`)
+- the `compiler`, `vm`, and `stdlib` Python packages for host integrations
+- the `isoko` project manager (`python -m isoko.cli`)
+
+## Your First Program
 
 Create a file `hello.i`:
 
@@ -70,50 +65,75 @@ Run it:
 i hello.i -r
 ```
 
-### Learning Resources
+Output:
 
-- [Tutorial](https://docs.i-lang.rw/tutorial)
-- [Language Specification](https://docs.i-lang.rw/spec)
-- [Standard Library](https://docs.i-lang.rw/stdlib)
-- [Examples](https://github.com/i-lang/examples)
+```
+Muraho, Isi!
+```
+
+Prefer the module form if the `i` entry point is not on PATH:
+
+```bash
+python -m compiler.compiler hello.i -r
+```
 
 ## Language Overview
 
-### Design Principles
+Code reads like natural Kinyarwanda. Blocks open with a keyword and close with
+`iherezo` (end); keywords are meaningful words rather than punctuation.
 
-1. **Readable** - Code should read like natural language
-2. **Natural** - Syntax should feel intuitive to Kinyarwanda speakers
-3. **Simple** - Minimal complexity, maximum clarity
-4. **Consistent** - Uniform patterns throughout the language
-5. **Powerful** - Capable of building any software system
-6. **Fast** - High-performance execution
-7. **Safe** - Memory safety and type safety by default
-8. **Modern** - Contemporary features and best practices
-9. **Professional** - Suitable for enterprise-grade applications
-10. **Self Hosting** - Eventually written in I itself
-
-### Natural Syntax
-
-Instead of punctuation, I uses Kinyarwanda words:
+### Hello and values
 
 ```i
-# Comparison operators
-a irenze 5        # a > 5
-a munsi ya 5      # a < 5
-a kandi b         # a && b
-a cyangwa b       # a || b
-si a              # !a
+andika "Muraho, Isi!"      # print with newline
+shyira izina = "Jean"      # mutable variable
+shyira_ko LIMIT = 1000     # constant
 ```
 
-### Block Structure
-
-Every block ends with `iherezo` (end):
+### Conditionals
 
 ```i
-niba a irenze 5
-    andika a
+shyira umwaka = 2024
+niba umwaka irenze 2000
+    andika "modern times"
+cyangwa_niba umwaka irenze 1000
+    andika "medieval"
+cyangwa
+    andika "ancient"
 iherezo
 ```
+
+### Loops
+
+```i
+kuri i muri 0 kugeza 10    # 0..9 (end is exclusive)
+    andika i
+iherezo
+
+shyira n = 5
+wihuse n irenze 0          # while
+    andika n
+    n = n - 1
+iherezo
+
+kugeza found               # do-while: body runs first
+    shyira guess = uburengero(soma())
+    found = guess == secret
+iherezo
+```
+
+### Comparison operators
+
+| I form | Meaning |
+| --- | --- |
+| `a irenze b` | `a > b` |
+| `a munsi b` / `a munsi_ya b` | `a < b` |
+| `a == b`, `a != b`, `a >= b`, `a <= b` | equality / ordering |
+| `si a` | `!a` (boolean negation) |
+
+> **Note (1.0.0):** logical operators `kandi` (and) and `cyangwa` (or) are
+> declared keywords but are not yet implemented. Combine conditions with nested
+> `niba` blocks.
 
 ### Example: Fibonacci
 
@@ -125,223 +145,103 @@ umurimo fibonacci(n: int) -> int
     subira fibonacci(n - 1) + fibonacci(n - 2)
 iherezo
 
-buri i muri 0 kugeza 10
+kuri i muri 0 kugeza 10
     andika fibonacci(i)
 iherezo
 ```
 
 ## Project Structure
 
-The repository is organized for million-line scale with clear separation of concerns:
+The repository is a monorepo. The reference compiler lives in `src/`; the
+framework and platform directories are separate workstreams.
 
 ```
-i-lang/
-├── bootstrap-compiler/          # Initial Python bootstrap compiler
-├── self-hosting-compiler/       # Self-hosted I compiler (future)
-├── compiler-core/               # Core compiler infrastructure
-│   ├── lexer/                   # Lexical analysis
-│   ├── parser/                  # Parsing and AST construction
-│   ├── ast/                     # Abstract Syntax Tree definitions
-│   ├── semantic/                # Semantic analysis
-│   ├── optimizer/               # Code optimization
-│   ├── codegen/                 # Bytecode generation
-│   └── native/                  # Native code generation
-├── compiler-frontends/          # Multiple compiler frontends
-│   ├── cli/                     # Command-line interface
-│   ├── lsp/                     # Language Server Protocol
-│   └── repl/                    # Read-Eval-Print Loop
-├── compiler-backends/          # Multiple compiler backends
-│   ├── bytecode/                # Bytecode backend
-│   ├── llvm/                    # LLVM backend (future)
-│   ├── wasm/                    # WebAssembly backend (future)
-│   └── native/                  # Native code backend (future)
-├── runtime-core/               # Core runtime infrastructure
-├── runtime-libraries/          # Runtime libraries
-├── vm-core/                     # Core virtual machine
-├── vm-optimizations/           # VM optimizations
-├── stdlib-core/                 # Core standard library
-├── stdlib-platform/             # Platform-specific stdlib
-├── frameworks-core/             # Core framework infrastructure
-├── frameworks-web/              # urubuga - Web framework
-├── frameworks-desktop/          # ibiro - Desktop framework
-├── frameworks-mobile/           # mobile - Mobile framework
-├── frameworks-data/             # ububiko - Database framework
-├── frameworks-ai/               # ubwenge - AI framework
-├── frameworks-games/            # imikino - Game engine
-├── frameworks-systems/          # sisitemu - Systems framework
-├── frameworks-cloud/            # igicu - Cloud framework
-├── frameworks-robotics/         # robot - Robotics framework
-├── frameworks-networking/       # amakuru - Networking framework
-├── tools-core/                  # Core tool infrastructure
-├── tools-package-manager/      # isoko - Package manager
-├── tools-formatter/             # iformat - Code formatter
-├── tools-debugger/              # idebug - Debugger
-├── tools-linter/                # Linter
-├── tools-testing/               # itest - Testing framework
-├── tools-documentation/         # idoc - Documentation generator
-├── tools-benchmarking/          # Benchmarking tools
-├── ide-core/                    # I Studio core
-├── ide-editor/                  # Editor component
-├── ide-debugger/                # Debugger component
-├── ide-intellisense/            # IntelliSense component
-├── ide-project-management/      # Project management
-├── ide-build-system/            # Build system integration
-├── ide-version-control/        # Version control integration
-├── ide-terminal/               # Terminal component
-├── ide-themes/                  # Theme system
-├── ide-plugins/                 # Plugin system
-├── docs-specification/          # Language specification docs
-├── docs-tutorials/              # Tutorial documentation
-├── docs-api/                    # API documentation
-├── docs-internals/              # Internal documentation
-├── docs-guides/                 # Developer guides
-├── docs-faq/                    # FAQ documentation
-├── docs-glossary/               # Glossary
-├── tests-unit/                  # Unit tests
-├── tests-integration/           # Integration tests
-├── tests-regression/            # Regression tests
-├── tests-performance/           # Performance tests
-├── tests-fuzzing/               # Fuzzing tests
-├── tests-property/              # Property-based tests
-├── examples-tutorials/          # Tutorial examples
-├── examples-benchmarks/         # Benchmark examples
-├── examples-real-world/         # Real-world examples
-├── examples-migration/          # Migration examples
-├── benchmarks-compiler/         # Compiler benchmarks
-├── benchmarks-runtime/          # Runtime benchmarks
-├── benchmarks-stdlib/           # Stdlib benchmarks
-├── benchmarks-frameworks/       # Framework benchmarks
-├── scripts-build/               # Build scripts
-├── scripts-test/                # Test scripts
-├── scripts-deploy/              # Deployment scripts
-├── scripts-maintenance/         # Maintenance scripts
-├── scripts-development/         # Development scripts
-├── scripts-release/             # Release scripts
-├── .github/workflows/          # GitHub Actions workflows
-├── .github/issue-templates/    # Issue templates
-├── .github/pr-templates/       # Pull request templates
-├── infrastructure-ci/           # CI infrastructure
-├── infrastructure-cd/           # CD infrastructure
-├── infrastructure-monitoring/  # Monitoring infrastructure
-├── infrastructure-security/     # Security infrastructure
-├── governance-committees/       # Governance committee docs
-├── governance-processes/        # Governance process docs
-└── governance-policies/         # Governance policy docs
+src/compiler/     # Compiler pipeline (lexer, parser, semantic, codegen, ...)
+src/vm/           # Virtual machine and runtime
+src/stdlib/       # 44 Python standard-library modules + urubuga.i
+src/isoko/        # isoko project manager (new/init/build/run/test/...)
+src/ufa/          # Error diagnostics engine (E-codes)
+docs/             # Architecture, specification, user guide, tutorials
+examples/         # Single-topic examples + 15 example projects
+frameworks/       # Framework workstreams (urubuga, ibiro, ububiko, ...)
+tools/            # Tooling workstreams (formatter, linter, lsp, ...)
+tests/            # Test suite
+```
+
+## Documentation
+
+- **[Getting Started](docs/user-guide/getting-started.md)** — the 15-minute path
+- **[Language Guide](docs/user-guide/language-guide.md)** — grammar, operators,
+  built-ins, and known 1.0.0 limitations
+- **[Tutorials](docs/tutorials/level-1.md)** — a 5-level tutorial series
+- **[Standard Library Reference](docs/user-guide/stdlib-reference.md)** — all 44 modules
+- **[isoko Guide](docs/user-guide/isoko-package-manager.md)** — project manager
+- **[Toolchain Guide](docs/user-guide/toolchain-guide.md)** — CLI, bytecode, embedding
+- **[API Reference](docs/user-guide/api-reference.md)** — host APIs
+- **[Error Reference](docs/user-guide/error-reference.md)** — PARS/SEM/E-codes
+- **[Migration Guide](docs/user-guide/migration-guide.md)** — 0.1.0 → 1.0.0
+- **[FAQ](docs/user-guide/faq.md)**
+
+## Examples
+
+- `examples/hello.i`, `variables.i`, `functions.i`, `conditionals.i`,
+  `loops.i`, `fibonacci.i` — single-topic basics
+- [`examples/projects/`](examples/projects/) — 15 self-contained programs
+  (fizzbuzz, primes, fibonacci, factorial, gcd/lcm, sum-of-digits, collatz,
+  multiplication table, diamond pattern, binary converter, even-fibonacci sum,
+  perfect numbers, palindromic primes, and an interactive guess-the-number
+  game). Every example compiles and runs against 1.0.0 with verified output.
+
+```bash
+i examples/projects/fizzbuzz.i -r
 ```
 
 ## Architecture
 
-The I programming language follows a clean architecture designed for extensibility and maintainability:
-
-### Compiler Pipeline
+The compiler pipeline is:
 
 ```
-Source Code → Lexer → Parser → AST → Semantic Analyzer → Optimizer → Code Generator → Bytecode
+Source Code → Lexer → Parser → AST → Semantic Analyzer → Code Generator → Bytecode → VM
 ```
 
-### Multi-Backend Support
+- `src/compiler/lexer` — tokenization, keyword table, E-code diagnostics
+- `src/compiler/parser` — recursive-descent parser to AST
+- `src/compiler/semantic` — symbol tables, type checking, imports
+- `src/compiler/ir` — intermediate representation
+- `src/compiler/optimization` — bytecode optimizer
+- `src/compiler/codegen` — bytecode emission
+- `src/vm` — stack-based virtual machine with a Python-accessible API
 
-The compiler is designed to support multiple backends:
-- **Bytecode VM** - Stack-based virtual machine (current)
-- **LLVM** - Native code generation (planned)
-- **WebAssembly** - Web deployment (planned)
-- **Native** - Platform-specific optimization (planned)
+See [ARCHITECTURE.md](ARCHITECTURE.md) for details.
 
-### Self-Hosting Strategy
+## Status & Roadmap
 
-The project follows a bootstrap strategy:
-1. **Phase 1**: Python bootstrap compiler (current)
-2. **Phase 2**: Incremental self-hosting
-3. **Phase 3**: Full self-hosting
-4. **Phase 4**: Self-hosting optimization
+**Current: v1.0.0 (released reference toolchain).** The core language compiles
+and runs: keywords, functions, recursion, loops, lists, input, and string
+handling are covered by 4,107 passing tests.
 
-For details, see [ARCHITECTURE.md](ARCHITECTURE.md).
-
-## Roadmap
-
-### Phase 1: Foundation (Current)
-- [x] Repository structure
-- [x] Documentation foundation
-- [ ] Language specification
-- [ ] Lexer implementation
-- [ ] Parser implementation
-- [ ] AST construction
-- [ ] Semantic analysis
-- [ ] Bytecode generation
-- [ ] Basic VM
-
-### Phase 2: Core Language
-- [ ] Complete type system
-- [ ] Standard library foundation
-- [ ] Error handling
-- [ ] Module system
-- [ ] Package system
-
-### Phase 3: Ecosystem
-- [ ] Package manager (isoko)
-- [ ] Testing framework (itest)
-- [ ] Documentation generator (idoc)
-- [ ] Formatter (iformat)
-- [ ] Linter
-
-### Phase 4: Tools
-- [ ] Debugger (idebug)
-- [ ] Language Server Protocol
-- [ ] REPL
-- [ ] Build system
-
-### Phase 5: IDE
-- [ ] I Studio development
-- [ ] Editor integration
-- [ ] Debugger integration
-- [ ] IntelliSense
-
-### Phase 6: Frameworks
-- [ ] urubuga (web framework)
-- [ ] ibiro (desktop framework)
-- [ ] mobile (mobile framework)
-- [ ] Specialized frameworks
-
-### Phase 7: Self-Hosting
-- [ ] Incremental self-hosting
-- [ ] Full compiler in I
-- [ ] Self-hosting optimization
-
-For detailed roadmap, see [ROADMAP.md](ROADMAP.md).
+Known 1.0.0 limitations are documented in the
+[Language Guide](docs/user-guide/language-guide.md#known-limitations) — notably
+logical operators, `gukoma` inside `wihuse` loops, module execution, and struct
+instantiation are not yet available. See [ROADMAP.md](ROADMAP.md) for the full
+roadmap.
 
 ## Contributing
 
-We welcome contributions from developers worldwide. Please read [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
+We welcome contributions. Please read [CONTRIBUTING.md](CONTRIBUTING.md) and
+[STYLE_GUIDE.md](STYLE_GUIDE.md). Run the test suite with:
 
-### Quick Contribution Guide
-
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Add tests
-5. Run the test suite
-6. Submit a pull request
-
-## Governance
-
-The I programming language is governed by a community-driven process. For details on governance, committees, and decision-making, see [GOVERNANCE.md](GOVERNANCE.md).
-
-## Security
-
-Security is a top priority. For security policies and reporting procedures, see [SECURITY.md](SECURITY.md).
+```bash
+python -m pytest tests
+```
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## Acknowledgments
-
-Inspired by the great programming languages that came before: Python, Rust, Go, Swift, Kotlin, TypeScript, Zig.
-
-Designed with a singular vision: to make programming accessible to millions of African developers in their native language.
+MIT — see [LICENSE](LICENSE).
 
 ---
 
-**I Programming Language** - *Kuvana Imana, Kubaka Icyo Turije* (From God, Building What We Have)
+**I Programming Language** — *Kuvana Imana, Kubaka Icyo Turije* (From God,
+Building What We Have)
 
 Founder: **Irabizi Paisible Valentin** | Location: **Rwanda**

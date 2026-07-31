@@ -39,7 +39,7 @@ echo 10 | i examples/projects/guess_game.i -r
 | 12 | `fibonacci_sum.i` | even Fibonacci numbers below a bound |
 | 13 | `perfect_numbers.i` | perfect numbers below N |
 | 14 | `palindromic_primes.i` | functions composing functions |
-| 15 | `guess_game.i` | `soma` (input), `wihuse true`, `gukoma` in `kuri` |
+| 15 | `guess_game.i` | `soma` (input), `kugeza` do-while loop, `niba` branches |
 
 The original six single-topic examples remain in `examples/` (`hello.i`,
 `variables.i`, `functions.i`, `conditionals.i`, `loops.i`, `fibonacci.i`).
