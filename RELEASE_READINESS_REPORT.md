@@ -1,8 +1,12 @@
-# Release Readiness Report — I Language v1.0
+# Release Readiness Report — I Language v1.0.0 (Vision 1.0.0)
 
-**Prepared by:** Release Stabilization Team
-**Date:** 2026-07-31
-**Reference:** `RELEASE_BLOCKERS.md` (Definition of Done), `RELEASE_PROCESS.md` (Pre-Release Checklist).
+**Prepared:** 2026-08-01
+**Scope:** Full public release of the I Programming Language v1.0.0 and the
+I Studio IDE desktop application, published from
+`https://github.com/irabizipaisiblevalentin/I`.
+**Supersedes:** `RELEASE_BLOCKERS.md`, `RELEASE_PROGRESS.md`,
+`PACKAGING_REPORT.md`, `PLATFORM_REPORT.md`, and the previous version of this
+file (all dated 2026-07-31 and reflecting the earlier RC1 scope).
 
 ---
 
@@ -10,68 +14,83 @@
 
 | # | DoD Item | Status |
 |---|---|---|
-| 1 | A1-A8 fixed, all tests green | ✅ Done — 4107 passed, 1 skipped |
-| 2 | `pip wheel .` installs; `i run examples/hello.i` prints `Muraho, Isi!`; variables/functions/conditionals/loops/fibonacci compile and run (structs deferred) | ✅ Done — verified below |
-| 3 | New e2e CLI tests green | ✅ Done — `tests/e2e/` 9 tests |
-| 4 | `SECURITY_VALIDATION_REPORT.md` + five release reports + Stabilization Report delivered | ✅ Done — see this report set |
-| 5 | **Stop for approval before RC1** | ⏸ **HERE** |
+| 1 | All tests green | ✅ **4250 passed, 1 skipped** (POSIX-only login-permission test on Windows) |
+| 2 | Version + metadata consistent at 1.0.0 | ✅ `pyproject.toml`, all `__version__` packages, stdlib `compiler`/`vm`, istudio, IDE |
+| 3 | Repo identity points to the official repo | ✅ README, pyproject URLs, CONTRIBUTING, governance, security, release docs; zero `i-lang.rw` / `github.com/i-lang` references |
+| 4 | CI workflows healthy and validated | ✅ `release.yml` (tag-driven, 5 jobs + combined checksums), `ci.yml` (5-OS matrix), `ide-release.yml`, `cd.yml`, `security.yml`; all YAML validated |
+| 5 | Windows installer + portable ZIP built and verified | ✅ `release/IStudioIDE-Setup-1.0.0.exe` + `istudio-ide-1.0.0-win-x64.zip`; frozen exe smoke-tested (health, docs, index, project restore) |
+| 6 | Linux + macOS packaging in place | ✅ `packaging/linux/` (tarball) + `packaging/macos/` (DMG) specs/scripts wired into `release.yml` (buildable in CI) |
+| 7 | Desktop app behaves like a modern IDE | ✅ native window, Open Folder… picker, Explorer "Open with I Studio" context menu, drag-and-drop import, last-workspace restore, command palette, settings, docs view |
+| 8 | Security + dependency audit clean | ✅ secret-scan clean, `pip-audit` no known vulns, `npm audit` 0 vulnerabilities |
+| 9 | **Stop for approval before publishing** | ⏸ **HERE** — see §6 |
 
-## 2. Blocker Matrix
+## 2. Test Suite
 
-| ID | Severity | Status | Evidence |
-|---|---|---|---|
-| A1 | Critical | ✅ Fixed | Wheel carries 15 packages + `stdlib/urubuga.i` + `py.typed` (see PACKAGING_REPORT.md) |
-| A2 | Critical | ✅ Fixed | Lexical/parse errors exit 1 with clean stderr, no traceback (`tests/e2e/test_cli.py`) |
-| A3 | Critical | ✅ Fixed | `andika` prints; golden outputs verified for all 6 examples |
-| A4 | High | ✅ Fixed | Legacy VM function dispatch; recursion works (`fibonacci.i`) |
-| A5 | High | ✅ Fixed | `irenze`/`munsi`/`munsi_ya` GT/LT (examples run) |
-| A6 | High | ✅ Fixed | 6 CLI e2e tests + 3 wheel e2e tests |
-| A7 | Medium | ✅ Fixed | CI workflows re-pointed; wheel-completeness job added |
-| A8 | Medium | ✅ Fixed | `__main__` guard in `virtual_machine.py` |
-| B1 | Medium | ✅ Fixed | stdlib in wheel + import tests (`tests/e2e/test_stdlib_wheel.py`) |
-| B2 | Medium | ✅ Fixed | See SECURITY_VALIDATION_REPORT.md |
-| B3 | Low | ✅ Fixed | v1.0.0 metadata everywhere + CHANGELOG entry |
+- **Backend:** `pytest` full run → **4250 passed, 1 skipped, 0 failed**
+  (130 s). Includes `tests/istudio` (409), stdlib, compiler, vm, e2e, urubuga.
+- **Version test:** `test_stdlib_sprint9.py::TestVM::test_version` updated to
+  assert `1.0.0`.
+- **Frontend:** `tsc --noEmit` clean; `npm run build` clean (1127 modules).
+- **IDE backend tests:** `pytest tests/istudio` green; router now resolves the
+  longest prefix so nested `/api/projects/...` routes work.
+- **Example programs:** `examples/build/example.py` builds under both dev and
+  release profiles.
 
-## 3. Pre-Release Checklist (RELEASE_PROCESS.md)
+## 3. Release Artifacts (built locally, Windows)
 
-- [x] All tests pass — 4107 passed, 1 skipped (POSIX-only login-permission test on Windows).
-- [x] CHANGELOG.md updated with `[1.0.0]` section.
-- [x] Version number updated — `pyproject.toml` + all 8 `__version__` packages + `--version`.
-- [x] Security review completed — SECURITY_VALIDATION_REPORT.md.
-- [x] Coverage measured — **53%** for `compiler` + `vm` (32101 stmts); **target of 90% not met** — documented as a known v1.0 gap, deferred to 1.1.
-- [ ] Migration guide — N/A (first release; no prior users).
-- [x] Release notes — embedded in this report set / CHANGELOG.
+| Artifact | Size | SHA-256 |
+|---|---|---|
+| `release/IStudioIDE-Setup-1.0.0.exe` | 16.9 MB | `2930d97667f65ee85b5a21167b1fc9974d1cbf85ea716455ced5a77475ffbf2d` |
+| `release/istudio-ide-1.0.0-win-x64.zip` | 19 MB | `fcdd78c11fc69ca7c451247c13714d3847a00ca14c8f45a2c4676c5e3c1ab364` |
 
-> **Coverage note:** measured 2026-07-31 with `pytest --cov=compiler --cov=vm`. The 90% target from
-> `RELEASE_PROCESS.md` is not reached at launch. The suite is functional (4107 tests), and the gap is
-> tracked for 1.1. Per launch policy, no fake measurement or fabricated coverage is reported.
+- PyPI wheel + sdist built and verified during RC1 (fresh-venv install, `i` CLI,
+  example programs, `isoko new`).
+- CI (`release.yml`) regenerates checksums across dist/ and release/ artifacts
+  when the tag is pushed.
 
-## 4. Remaining Action Items Before RC1
+## 4. Desktop App (I Studio IDE, Windows)
 
-1. ~~**Track `src/stdlib/urubuga.i` in git.**~~ ✅ Done — file is tracked and present in the wheel.
-2. ✅ **Stabilization work committed** — commit `1b295bd` includes all sprint fixes plus repo hygiene
-   (760 tracked `__pycache__`/`.pyc` files and `test.wal`, `.istudio-workspace`, `logs/audit.jsonl`
-   untracked; `.gitignore` extended).
-3. ✅ **Coverage measured** — see §3 (53%, 90% target deferred to 1.1).
-4. ✅ **RC1 artifacts built and verified** — `dist/i_lang-1.0.0.tar.gz` + wheel; fresh-venv install,
-   `i` CLI, example programs, and `isoko new` all verified end-to-end.
-5. **Launch-day uploads** (require remote/credentials on the release machine): create tag `v1.0.0`,
-   push, publish GitHub Release with artifacts + checksums, upload to Test PyPI then PyPI per
-   RELEASE_PROCESS.md steps 5–8.
+Implemented as a pywebview (WebView2) native window over the local IDE server:
 
-## 5. Risk Register
+- **Workspaces:** any folder is a workspace (no `ilang.toml` required).
+- **Open methods:** Welcome → Open Folder… (native picker); File Explorer
+  right-click → *Open with I Studio* (registered per-user by the installer for
+  both folder context menu and folder-background); `istudio-ide --app <path>`.
+- **Drag & drop:** files dropped from Explorer onto the window are imported
+  into the active project; last workspace is restored on launch.
+- **Editor:** Monaco with I syntax highlighting, breakpoints, run/debug,
+  command palette (Ctrl+Shift+P / F1), settings (theme/font size/tab
+  size/minimap/word wrap), sidebar docs view, integrated terminal.
+- **Docs:** 7 sealed guides bundled and served at `/docs/...`.
 
-| Risk | Likelihood | Impact | Mitigation |
-|---|---|---|---|
-| ~~`urubuga.i` missing from CI checkout~~ | ~~High~~ | ~~Medium~~ | ✅ Resolved — tracked in `1b295bd` and present in wheel |
-| Legacy-VM structs unsupported | Certain | Medium | Documented; deferred to 1.1 (Category C) |
-| Modern pipeline not wired to CLI | Certain | Medium | Documented; deferred to 1.1 (Category C) |
-| Coverage below 90% target | Certain | Medium | Honest measurement recorded (53%); tracked for 1.1 |
-| `python -m compiler.compiler` emits stdlib `compiler` RuntimeWarning | High | Low | Only in `-m` form; the installed `i` console script is the primary path (warning-free) |
-| No git remote / gh CLI on release machine | Certain (this machine) | Medium | Uploads delegated to the release machine with credentials per RELEASE_PROCESS.md |
+## 5. Known v1.0 Gaps (deferred to 1.1)
 
-## 6. Verdict
+- Modern compiler pipeline (Sprint 9.x core/build) not fully wired into the
+  `i` CLI; the CLI uses the legacy pipeline for run/compile.
+- Native compiler targets x86-64 Windows/Linux only; arm64 and macOS native
+  builds deferred.
+- VM exception unwinding is simplified.
+- Coverage: 53% for `compiler` + `vm` (32,101 stmts) — the 90% target is not
+  met; measured honestly and tracked for 1.1.
 
-**READY for launch-day uploads.** RC1 packaged and verified; all DoD items complete except the
-release upload steps (tag, GitHub Release, PyPI), which require the configured remotes and
-credentials on the release machine.
+## 6. Launch-Day Uploads (require the release machine)
+
+1. **Logo artwork (blocked on user):** the pasted clipboard image cannot be
+   read by this tool. Save it to the repo as `ide/public/logo.svg`/`logo.png`
+   (welcome/favicon) and `packaging/windows/app_icon.ico` (window + installer
+   icon; a placeholder `app.ico` is wired in now).
+2. Commit the working tree (IDE, packaging, CI, docs) and push to
+   `https://github.com/irabizipaisiblevalentin/I`.
+3. Push tag `v1.0.0` — `release.yml` builds all platform artifacts, runs
+   pytest, and creates a **draft** GitHub Release with combined `checksums.txt`
+   and `RELEASE_NOTES.md` body.
+4. Founder reviews the draft Release and clicks **Publish**.
+5. `twine upload` the wheel + sdist to Test PyPI, then PyPI (`pip install
+   i-lang`).
+
+## 7. Verdict
+
+**READY for launch-day uploads.** All gates pass locally (tests, typecheck,
+builds, installer smoke tests, security audit). Remaining work is external:
+founder-supplied logo file, git remote/credentials on the release machine, and
+the tag + GitHub Release + PyPI steps in §6.

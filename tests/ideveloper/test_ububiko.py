@@ -2,11 +2,21 @@
 
 from __future__ import annotations
 
-from isoko.ideveloper.ububiko import PackageRegistry
+import pytest
+
 from isoko.ideveloper.ibikoreshingiro import PackageRelease, PackageVisibility
+from isoko.ideveloper.ububiko import PackageRegistry
 
 
-def test_registry_init():
+@pytest.fixture(autouse=True)
+def _isolated_home(monkeypatch, tmp_path):
+    """Each test gets a fresh, empty registry home so persisted state never
+    leaks between tests or into the developer's real ~/.isoko directory."""
+    monkeypatch.setenv("ISOKO_HOME", str(tmp_path))
+    return tmp_path
+
+
+def test_registry_init(_isolated_home):
     reg = PackageRegistry()
     assert reg.list_packages() == []
 
@@ -84,7 +94,7 @@ def test_popularity():
     reg = PackageRegistry()
     reg.publish(PackageRelease(name="mypkg", version="1.0.0"))
     pop = reg.get_popularity("mypkg")
-    assert "downloads" in pop
+    assert "total_downloads" in pop
     assert pop["score"] == 0.0
 
 

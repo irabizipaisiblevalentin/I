@@ -1,0 +1,6 @@
+"""Allow ``python -m istudio.ide`` (used by child-task spawning in dev mode)."""
+
+from .main import main
+
+if __name__ == "__main__":
+    raise SystemExit(main())

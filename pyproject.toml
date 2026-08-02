@@ -10,7 +10,7 @@ readme = "README.md"
 requires-python = ">=3.10"
 license = {text = "MIT"}
 authors = [
-    {name = "Irabizi Paisible Valentin", email = "founder@i-lang.rw"}
+    {name = "Irabizi Paisible Valentin", email = "irabizipaisiblevalentin@gmail.com"}
 ]
 keywords = [
     "programming-language",
@@ -32,13 +32,17 @@ classifiers = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/i-lang/i-lang"
-Documentation = "https://docs.i-lang.rw"
-Repository = "https://github.com/i-lang/i-lang"
-Issues = "https://github.com/i-lang/i-lang/issues"
+Homepage = "https://github.com/irabizipaisiblevalentin/I"
+Documentation = "https://github.com/irabizipaisiblevalentin/I/tree/main/docs"
+Repository = "https://github.com/irabizipaisiblevalentin/I"
+Issues = "https://github.com/irabizipaisiblevalentin/I/issues"
 
 [project.scripts]
 i = "compiler.compiler:main"
+isoko = "isoko.cli:main"
+istudio = "istudio.itegeko:main"
+istudio-desktop = "istudio.desktop:main"
+istudio-ide = "istudio.ide.main:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]

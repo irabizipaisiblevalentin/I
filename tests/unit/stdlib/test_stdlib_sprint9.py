@@ -838,7 +838,7 @@ class TestPackage(unittest.TestCase):
 class TestVM(unittest.TestCase):
     def test_version(self):
         from stdlib.vm import version
-        self.assertEqual(version(), "0.1.0")
+        self.assertEqual(version(), "1.0.0")
 
 
 if __name__ == "__main__":

@@ -331,17 +331,21 @@ class CodeGenerator(ASTVisitor):
         end_jump = self._emit(OpCode.JUMP)
         self._patch_jump(else_jump)
 
+        # Each matching elif body must skip over the remaining elif/else
+        # branches, so defer patching until the whole chain has been emitted.
+        elif_end_jumps: list[int] = []
         for elif_branch in stmt.elif_branches:
             elif_branch.condition.accept(self)
             elif_else_jump = self._emit(OpCode.JUMP_IF_FALSE)
             elif_branch.body.accept(self)
-            elif_end_jump = self._emit(OpCode.JUMP)
+            elif_end_jumps.append(self._emit(OpCode.JUMP))
             self._patch_jump(elif_else_jump)
-            self._patch_jump(elif_end_jump)
 
         if stmt.else_branch:
             stmt.else_branch.accept(self)
 
+        for elif_end_jump in elif_end_jumps:
+            self._patch_jump(elif_end_jump)
         self._patch_jump(end_jump)
 
     def visit_while_stmt(self, stmt: WhileStmt) -> None:

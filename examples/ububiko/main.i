@@ -14,7 +14,7 @@ fn main() {
 
     // Create table and insert data
     repo.create_table()
-    let user = User { name: "I Developer", email: "dev@i-lang.rw" }
+    let user = User { name: "I Developer", email: "dev@example.com" }
     repo.save(user)
 
     // Query

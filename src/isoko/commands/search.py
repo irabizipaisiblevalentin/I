@@ -45,5 +45,4 @@ def run(args) -> int:
         version = pkg.get("latest_version", "?")
         desc = pkg.get("description", "")
         output.label_value(name, f"v{version} — {desc}")
-
     return 0

@@ -1,0 +1,55 @@
+name: IDE Windows Build
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - 'src/istudio/**'
+      - 'ide/**'
+      - 'packaging/windows/**'
+
+permissions:
+  contents: read
+
+jobs:
+  build-installer:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: ide/package-lock.json
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.14'
+
+      - name: Install Inno Setup
+        run: |
+          winget install --id JRSoftware.InnoSetup --exact --silent --accept-source-agreements --accept-package-agreements
+
+      - name: Install Python toolchain
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e .
+          pip install pyinstaller pywebview
+
+      - name: Install frontend dependencies
+        working-directory: ide
+        run: npm ci
+
+      - name: Build installer and portable archive
+        run: powershell -ExecutionPolicy Bypass -File packaging/windows/build_windows.ps1
+
+      - name: Upload installer artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: IStudioIDE-Setup
+          path: release/*

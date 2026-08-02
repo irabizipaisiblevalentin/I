@@ -865,22 +865,23 @@ class SemanticAnalyzer(ASTVisitor):
         callee_type = self._analyze_expr(expr.callee)
         loc = _location_of(expr, self.ctx.current_file)
 
+        # Always analyze arguments so undefined identifiers inside calls are
+        # reported (e.g. ``andika y`` where ``y`` was never declared).
+        for arg in expr.arguments:
+            self._analyze_expr(arg)
+
         if callee_type.kind == SymbolType.FUNCTION:
             if callee_type.return_type:
                 return callee_type.return_type
             return TYPE_NONE
 
         if callee_type.kind == SymbolType.ANY:
-            for arg in expr.arguments:
-                self._analyze_expr(arg)
             return TYPE_ANY
 
         self.ctx.diagnostics.error(
             SemanticErrorCode.SEM301_NOT_CALLABLE,
             loc, str(callee_type),
         )
-        for arg in expr.arguments:
-            self._analyze_expr(arg)
         return TYPE_ANY
 
     def visit_constructor_expr(self, expr: ConstructorExpr) -> TypeDescriptor:

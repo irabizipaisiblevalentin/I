@@ -29,6 +29,16 @@ src/istudio/
 ├── iterambere.py                # Collaboration
 ├── itegeko.py                   # CLI subcommands (istudio + isoko bridge)
 ├── ibikoresho_rusange.py        # Common utilities (cache, event bus, etc.)
+└── desktop/                     # Desktop application (tkinter)
+    ├── __init__.py              # Desktop public API, is_available(), main()
+    ├── theme.py                 # Color palettes per EditorTheme
+    ├── highlight.py             # Syntax tokenizer (headless)
+    ├── runner.py                # ScriptRunner (compiler/VM worker thread)
+    ├── controller.py            # DesktopController (headless coordination)
+    ├── editor.py                # CodeEditor widget (gutter, completions, hover, ...)
+    ├── sidebar.py               # Explorer + Symbols outline
+    ├── panel.py                 # Problems / Output / Run panels
+    └── app.py                   # IStudioApp main window, menus, shortcuts
 ```
 
 ## Module Responsibilities

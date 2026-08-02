@@ -332,7 +332,7 @@ This document is supported by and should be read in conjunction with the followi
 |----------|-------------|----------|
 | [IPMP.md](../implementation/IPMP.md) | I Programming Language Master Plan — the overarching vision and 30-year roadmap | `docs/implementation/IPMP.md` |
 | [ENGINEERING_EXECUTION_MANUAL.md](ENGINEERING_EXECUTION_MANUAL.md) | Engineering Execution Manual — detailed engineering processes and workflows | `docs/governance/ENGINEERING_EXECUTION_MANUAL.md` |
-| [LANGUAGE_SPECIFICATION.md](../language-specification.md) | Language Specification — formal definition of the I language syntax and semantics | `docs/language-specification.md` |
+| [LANGUAGE_SPECIFICATION.md](../specification/LANGUAGE_SPECIFICATION.md) | Language Specification — formal definition of the I language syntax and semantics (Version 1.0 LANGUAGE FREEZE) | `docs/specification/LANGUAGE_SPECIFICATION.md` |
 | [ARCHITECTURE.md](../../ARCHITECTURE.md) | Architecture Document — system architecture and component design | `ARCHITECTURE.md` |
 
 ---

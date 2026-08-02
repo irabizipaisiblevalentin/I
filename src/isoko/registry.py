@@ -60,12 +60,40 @@ class RegistryClient:
         return meta.get("versions", {}).get(version)
 
     def search(self, query: str, limit: int = 20) -> List[Dict]:
-        """Search for packages."""
+        """Search for packages.
+
+        Normalizes several response shapes into a canonical item of the form
+        ``{"name", "latest_version", "description"}``:
+        - ``{"results": [...]}`` / ``{"objects": [...]}`` / ``{"packages": [...]}``
+        - a bare list of items
+        - items carrying either ``latest_version`` or ``version``
+        """
         try:
             data = self._request(f"/-/search?q={query}&limit={limit}")
-            return data.get("results", [])
+            if isinstance(data, list):
+                return [self._normalize_search_item(i) for i in data]
+            if isinstance(data, dict):
+                for key in ("results", "objects", "packages"):
+                    if isinstance(data.get(key), list):
+                        return [self._normalize_search_item(i) for i in data[key]]
+            return []
         except RegistryError:
             return []
+
+    @staticmethod
+    def _normalize_search_item(item: Any) -> Dict:
+        """Normalize a registry search item to a canonical shape."""
+        if not isinstance(item, dict):
+            return {"name": str(item), "latest_version": "?", "description": ""}
+        pkg = item.get("package", {}) if isinstance(item.get("package"), dict) else item
+        return {
+            "name": pkg.get("name", item.get("name", "")),
+            "latest_version": pkg.get(
+                "latest_version",
+                pkg.get("version", item.get("latest_version", item.get("version", "?"))),
+            ),
+            "description": pkg.get("description", item.get("description", "")),
+        }
 
     def download(self, name: str, version: str) -> Optional[bytes]:
         """Download a package tarball."""

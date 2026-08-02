@@ -8,4 +8,6 @@ from vm.vm_config import VMConfig
 from vm.vm_context import VMContext
 from vm.vm_instance import VMInstance
 
+__version__ = "1.0.0"
+
 __all__ = ["VMConfig", "VMContext", "VMInstance"]

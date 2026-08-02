@@ -14,7 +14,7 @@ from .errors import (
     CircularDependencyError,
     TaskError,
 )
-from .pipeline import BuildPipeline
+from .pipeline import BuildConfig, BuildPipeline
 from .profile import BuildProfile
 from .scheduler import TaskScheduler
 from .task import BuildTask, TaskResult, TaskType
@@ -22,6 +22,7 @@ from .task import BuildTask, TaskResult, TaskType
 __all__ = [
     # Main classes
     "BuildPipeline",
+    "BuildConfig",
     "BuildTask",
     "TaskType",
     "TaskResult",

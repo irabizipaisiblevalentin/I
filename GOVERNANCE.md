@@ -415,16 +415,16 @@ See [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md) for detailed process.
 
 ### Governance Questions
 
-- **Email**: governance@i-lang.rw
-- **GitHub**: @i-lang/governance
+- **Email**: irabizipaisiblevalentin@gmail.com
+- **GitHub**: https://github.com/irabizipaisiblevalentin/I/discussions
 - **Discord**: #governance channel
 
 ### Committee Contacts
 
-- **Board**: board@i-lang.rw
-- **TSC**: tsc@i-lang.rw
-- **Community**: community@i-lang.rw
-- **Security**: security@i-lang.rw
+- **Board**: irabizipaisiblevalentin@gmail.com
+- **TSC**: irabizipaisiblevalentin@gmail.com
+- **Community**: https://github.com/irabizipaisiblevalentin/I/discussions
+- **Security**: irabizipaisiblevalentin@gmail.com
 
 ---
 

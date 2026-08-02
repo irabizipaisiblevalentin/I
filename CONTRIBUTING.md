@@ -35,8 +35,8 @@ The I Programming Language is being built to last for decades. Every contributio
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/i-lang/i-lang.git
-   cd i-lang
+   git clone https://github.com/irabizipaisiblevalentin/I.git
+   cd I
    ```
 
 2. **Install dependencies**
@@ -56,7 +56,7 @@ The I Programming Language is being built to last for decades. Every contributio
    ```
 
 5. **Read the documentation**
-   - [Language Specification](docs-specification/LANGUAGE_SPECIFICATION.md)
+   - [Language Specification](docs/specification/LANGUAGE_SPECIFICATION.md)
    - [Architecture](ARCHITECTURE.md)
    - [Style Guide](STYLE_GUIDE.md)
 
@@ -144,12 +144,12 @@ Every feature must include:
 
 ```
 tests/
-├── unit/              # Unit tests for individual components
-├── integration/       # Integration tests for component interactions
-├── regression/        # Regression tests for known bugs
-├── performance/       # Performance benchmarks
-├── fuzzing/          # Fuzzing tests for robustness
-└── property/         # Property-based tests
+â”œâ”€â”€ unit/              # Unit tests for individual components
+â”œâ”€â”€ integration/       # Integration tests for component interactions
+â”œâ”€â”€ regression/        # Regression tests for known bugs
+â”œâ”€â”€ performance/       # Performance benchmarks
+â”œâ”€â”€ fuzzing/          # Fuzzing tests for robustness
+â””â”€â”€ property/         # Property-based tests
 ```
 
 ## Documentation Requirements

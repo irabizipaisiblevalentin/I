@@ -6,7 +6,7 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-**v1.0.0** — a stable, documented, tested release of the reference toolchain.
+**v1.0.0** — Vision 1: a stable, documented, tested release of the reference toolchain.
 
 </div>
 
@@ -14,6 +14,7 @@
 
 - [Mission](#mission)
 - [Installation](#installation)
+- [Downloads & Installers](#downloads--installers)
 - [Your First Program](#your-first-program)
 - [Language Overview](#language-overview)
 - [Project Structure](#project-structure)
@@ -39,8 +40,8 @@ The reference implementation is a Python package. Python 3.10+ is required.
 pip install i-lang
 
 # Or build from source
-git clone https://github.com/i-lang/i-lang.git
-cd i-lang
+git clone https://github.com/irabizipaisiblevalentin/I.git
+cd I
 python -m pip install -e .
 ```
 
@@ -49,6 +50,24 @@ This installs:
 - the `i` compiler CLI (`i hello.i -r`, `i --version`)
 - the `compiler`, `vm`, and `stdlib` Python packages for host integrations
 - the `isoko` project manager (`python -m isoko.cli`)
+- **I Studio** — the CLI/LSP IDE platform (`istudio`, `isoko istudio`)
+- **I Studio IDE** — the web IDE (`istudio-ide` / `istudio ide`, default `http://127.0.0.1:8790`) and native Windows desktop mode (`istudio-ide --app`)
+
+## Downloads & Installers
+
+Prebuilt installers and archives for each Vision 1.0.0 release are published
+on the [GitHub Releases](https://github.com/irabizipaisiblevalentin/I/releases)
+page, alongside SHA-256 checksums (`checksums.txt`):
+
+- **Windows** — `IStudioIDE-Setup-1.0.0.exe` (Inno Setup installer) and
+  `istudio-ide-1.0.0-win-x64.zip` (portable, no installation required)
+- **Linux** — `istudio-ide-1.0.0-linux-x86_64.tar.gz` (portable AppImage-style
+  build; DEB/RPM packages planned for future releases)
+- **macOS** — `istudio-ide-1.0.0-macos.dmg` (universal when built on both
+  architectures)
+- **PyPI** — `pip install i-lang` for the full command-line toolchain
+
+All release artifacts are built and verified by CI from tagged commits.
 
 ## Your First Program
 
@@ -176,6 +195,7 @@ tests/            # Test suite
 - **[Tutorials](docs/tutorials/level-1.md)** — a 5-level tutorial series
 - **[Standard Library Reference](docs/user-guide/stdlib-reference.md)** — all 44 modules
 - **[isoko Guide](docs/user-guide/isoko-package-manager.md)** — project manager
+- **[I Studio Guide](docs/istudio/README.md)** — the CLI/LSP IDE platform (`istudio`, `isoko istudio`)
 - **[Toolchain Guide](docs/user-guide/toolchain-guide.md)** — CLI, bytecode, embedding
 - **[API Reference](docs/user-guide/api-reference.md)** — host APIs
 - **[Error Reference](docs/user-guide/error-reference.md)** — PARS/SEM/E-codes

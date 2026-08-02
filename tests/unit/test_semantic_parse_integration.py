@@ -363,6 +363,40 @@ iherezo
         assert not a.has_errors
 
 
+class TestUndefinedVariableInCalls:
+    """Undefined identifiers inside call arguments must be reported."""
+
+    def test_undefined_variable_as_print_argument(self):
+        _, a = _analyze_source("andika y")
+        assert a.has_errors
+        codes = {d.code for d in a.diagnostics.diagnostics}
+        assert SemanticErrorCode.SEM200_UNDEFINED_VARIABLE in codes
+
+    def test_undefined_variable_inside_binary_expr_argument(self):
+        _, a = _analyze_source("shyira a = 10\nandika a + b")
+        assert a.has_errors
+        codes = {d.code for d in a.diagnostics.diagnostics}
+        assert SemanticErrorCode.SEM200_UNDEFINED_VARIABLE in codes
+
+    def test_undefined_variable_in_user_function_call(self):
+        _, a = _analyze_source("""
+umurimo umubare(x) kora
+    subira x
+iherezo
+andika umubare(nonexistent)
+""")
+        assert a.has_errors
+        codes = {d.code for d in a.diagnostics.diagnostics}
+        assert SemanticErrorCode.SEM200_UNDEFINED_VARIABLE in codes
+
+    def test_defined_variables_in_calls_still_pass(self):
+        _, a = _analyze_source("""
+shyira y = 42
+andika y
+""")
+        assert not a.has_errors
+
+
 class TestBilingualDiagnostics:
     """Tests that diagnostics produce bilingual messages."""
 

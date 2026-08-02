@@ -29,7 +29,7 @@ class CreateUsersTable(Migration):
     def seed(self, engine: MigrationEngine) -> None:
         engine.execute(
             "INSERT INTO users (name, email) VALUES (:name, :email)",
-            {"name": "Admin", "email": "admin@i-lang.rw"},
+            {"name": "Admin", "email": "admin@example.com"},
         )
 ```
 

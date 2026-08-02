@@ -1,66 +1,225 @@
 name: Release
 
 on:
+  push:
+    tags:
+      - 'v*.*.*'
   workflow_dispatch:
     inputs:
-      version:
-        description: 'Version to release (e.g., 1.0.0)'
-        required: true
-        default: ''
       prerelease:
         description: 'Is this a prerelease?'
         required: true
         default: 'false'
         type: boolean
 
+permissions:
+  contents: write
+
 jobs:
-  release:
+  package:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      
+
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      
+
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install build twine
-      
-      - name: Update version
-        run: |
-          VERSION="${{ github.event.inputs.version }}"
-          sed -i "s/__version__ = .*/__version__ = \"$VERSION\"/" src/compiler/__init__.py
-          sed -i "s/version = .*/version = \"$VERSION\"/" pyproject.toml
-      
-      - name: Commit version change
-        run: |
-          git config --local user.email "action@github.com"
-          git config --local user.name "GitHub Action"
-          git add src/compiler/__init__.py pyproject.toml
-          git commit -m "Bump version to ${{ github.event.inputs.version }}"
-          git tag -a "v${{ github.event.inputs.version }}" -m "Release v${{ github.event.inputs.version }}"
-      
+          pip install build pytest
+
       - name: Build package
         run: python -m build
-      
+
+      - name: Run test suite
+        run: |
+          pip install -e .
+          pytest tests -q
+
+      - name: Generate checksums
+        run: |
+          cd dist
+          sha256sum * > checksums.txt
+
+      - name: Upload package artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-package
+          path: dist/
+
+  windows-installer:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: ide/package-lock.json
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.14'
+
+      - name: Install Inno Setup
+        run: |
+          winget install --id JRSoftware.InnoSetup --exact --silent --accept-source-agreements --accept-package-agreements
+
+      - name: Install Python toolchain
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e .
+          pip install pyinstaller pywebview
+
+      - name: Install frontend dependencies
+        working-directory: ide
+        run: npm ci
+
+      - name: Build installer and portable archive
+        run: powershell -ExecutionPolicy Bypass -File packaging/windows/build_windows.ps1
+
+      - name: Upload Windows artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-windows
+          path: release/
+
+  linux-app:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: ide/package-lock.json
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install Python toolchain
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e .
+          pip install pyinstaller pywebview
+
+      - name: Install frontend dependencies
+        working-directory: ide
+        run: npm ci
+
+      - name: Build portable tarball
+        run: bash packaging/linux/build_linux.sh
+
+      - name: Upload Linux artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-linux
+          path: release/
+
+  macos-app:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: ide/package-lock.json
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install Python toolchain
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e .
+          pip install pyinstaller pywebview
+
+      - name: Install frontend dependencies
+        working-directory: ide
+        run: npm ci
+
+      - name: Build disk image
+        run: bash packaging/macos/build_macos.sh
+
+      - name: Upload macOS artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-macos
+          path: release/
+
+  publish:
+    runs-on: ubuntu-latest
+    needs: [package, windows-installer, linux-app, macos-app]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Download package artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: release-package
+          path: dist/
+
+      - name: Download Windows artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: release-windows
+          path: release/
+
+      - name: Download Linux artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: release-linux
+          path: release/
+
+      - name: Download macOS artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: release-macos
+          path: release/
+
+      - name: Generate combined checksums
+        run: |
+          rm -f dist/checksums.txt release/checksums.txt
+          cd dist
+          sha256sum * | sed 's|^|dist/|' > ../release/checksums.txt
+          cd ../release
+          sha256sum * | sed 's|^|release/|' >> checksums.txt
+
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v${{ github.event.inputs.version }}
-          name: Release v${{ github.event.inputs.version }}
+          tag_name: ${{ github.ref_name }}
+          name: I Programming Language ${{ github.ref_name }}
+          body_path: RELEASE_NOTES.md
           draft: true
-          prerelease: ${{ github.event.inputs.prerelease }}
+          prerelease: ${{ github.event.inputs.prerelease == 'true' }}
           files: |
             dist/*
+            release/*
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      
-      - name: Push changes
-        run: |
-          git push origin master
-          git push origin v${{ github.event.inputs.version }}

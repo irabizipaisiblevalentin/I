@@ -8,7 +8,6 @@ Transforms token stream into validated AST.
 from __future__ import annotations
 
 from typing import Callable, Dict, List, Optional
-from dataclasses import dataclass, field
 
 from ..lexer.token import Token, TokenType
 from ..lexer import tokenize as lex_tokenize
@@ -36,6 +35,7 @@ from ..ast.nodes import (
     FunctionParam,
     FunctionStmt,
     GetExpr,
+    GroupingExpr,
     IfExpr,
     IfStmt,
     IdentifierExpr,
@@ -829,7 +829,7 @@ class Parser:
             self._advance()
             expr = self._expression()
             self._consume(TokenType.RPAREN, "')'", "Expected ')' after expression")
-            return GroupingExprWrapper(expr, location=self._span_from(tok))
+            return GroupingExpr(expression=expr, location=self._span_from(tok))
 
         # List literal
         if tok.type == TokenType.LBRACKET:
@@ -1182,16 +1182,6 @@ class Parser:
             end_line=end.line,
             end_column=end.column + end.span,
         )
-
-
-@dataclass
-class GroupingExprWrapper(Expr):
-    """Wrapper for grouping expression (parenthesized)."""
-    expression: Any
-    span: SourceSpan = field(default_factory=SourceSpan)
-
-    def accept(self, visitor):
-        return visitor.visit_grouping_expr(self) if hasattr(visitor, 'visit_grouping_expr') else None
 
 
 # ══════════════════════════════════════════════════════════════════

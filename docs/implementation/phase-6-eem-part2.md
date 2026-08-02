@@ -157,21 +157,21 @@ make bench-self-hosting
 
 | Metric | Current | Target | Status |
 |--------|---------|--------|--------|
-| Test Coverage | 92% | > 90% | ✅ |
-| Build Success | 99.5% | > 99% | ✅ |
-| Bug Resolution | 2.1 days | < 3 days | ✅ |
-| Review Turnaround | 1.8 days | < 2 days | ✅ |
-| Release Cadence | 4/year | 4-6/year | ✅ |
+| Test Coverage | 92% | > 90% | âœ… |
+| Build Success | 99.5% | > 99% | âœ… |
+| Bug Resolution | 2.1 days | < 3 days | âœ… |
+| Review Turnaround | 1.8 days | < 2 days | âœ… |
+| Release Cadence | 4/year | 4-6/year | âœ… |
 
 ### Historical Trends
 
 | Metric | Q1 2026 | Q2 2026 | Q3 2026 | Trend |
 |--------|---------|---------|---------|-------|
-| Test Coverage | 85% | 88% | 92% | ↑ |
-| Build Success | 98% | 99% | 99.5% | ↑ |
-| Bug Resolution | 3.5 days | 2.8 days | 2.1 days | ↓ |
-| Review Turnaround | 2.5 days | 2.1 days | 1.8 days | ↓ |
-| Community Contributions | 30/month | 45/month | 55/month | ↑ |
+| Test Coverage | 85% | 88% | 92% | â†‘ |
+| Build Success | 98% | 99% | 99.5% | â†‘ |
+| Bug Resolution | 3.5 days | 2.8 days | 2.1 days | â†“ |
+| Review Turnaround | 2.5 days | 2.1 days | 1.8 days | â†“ |
+| Community Contributions | 30/month | 45/month | 55/month | â†‘ |
 
 ## 11.3 Metrics Reporting
 
@@ -237,21 +237,21 @@ make report-quarterly
 
 ```
 metrics/
-├── dashboard/
-│   ├── index.html
-│   ├── css/
-│   ├── js/
-│   └── api/
-├── reports/
-│   ├── daily/
-│   ├── weekly/
-│   ├── monthly/
-│   └── quarterly/
-└── charts/
-    ├── coverage/
-    ├── performance/
-    ├── security/
-    └── community/
+â”œâ”€â”€ dashboard/
+â”‚   â”œâ”€â”€ index.html
+â”‚   â”œâ”€â”€ css/
+â”‚   â”œâ”€â”€ js/
+â”‚   â””â”€â”€ api/
+â”œâ”€â”€ reports/
+â”‚   â”œâ”€â”€ daily/
+â”‚   â”œâ”€â”€ weekly/
+â”‚   â”œâ”€â”€ monthly/
+â”‚   â””â”€â”€ quarterly/
+â””â”€â”€ charts/
+    â”œâ”€â”€ coverage/
+    â”œâ”€â”€ performance/
+    â”œâ”€â”€ security/
+    â””â”€â”€ community/
 ```
 
 ### Chart Types
@@ -315,7 +315,7 @@ metrics/
 | Document | Location | Description |
 |----------|----------|-------------|
 | IPMP | docs-internals/IPMP/IPMP.md | Master Plan |
-| Language Specification | docs-specification/LANGUAGE_SPECIFICATION.md | Language Spec |
+| Language Specification | docs/specification/LANGUAGE_SPECIFICATION.md | Language Spec |
 | Architecture | ARCHITECTURE.md | System Architecture |
 | Implementation Plans | docs-internals/implementation/ | Phase Plans |
 | Evolution | docs-internals/evolution/ | Evolution Documents |

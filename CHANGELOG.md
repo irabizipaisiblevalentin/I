@@ -5,11 +5,19 @@ All notable changes to the I Programming Language will be documented in this fil
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [1.0.0] - 2026-07-31
+## [1.0.0] - 2026-08-01
 
 ### Added
+- I Studio web IDE (`istudio-ide` console script / `istudio ide` subcommand): browser-based IDE with a React/TypeScript/Monaco frontend (`ide/`) and a stdlib-only Python backend (`src/istudio/ide/`). Edit, run, debug, built-in terminal, project templates, Git panel, and package-manager integration over a local HTTP server (`--host`/`--port`, default `127.0.0.1:8790`).
+- I Studio IDE Windows desktop app: `--app` mode runs the IDE in a native window via pywebview (WebView2). Any folder is a workspace; the installer registers an **Open with I Studio** File Explorer context-menu entry (folder + background), the Welcome screen offers a native **Open Folder…** picker, files dragged from Explorer are imported into the active project, and the last workspace is restored on launch.
+- I Studio IDE features: command palette (Ctrl/Cmd+Shift+P, F1), settings modal + status-bar theme dropdown (theme, font/tab size, minimap, word wrap), sidebar docs view with 7 bundled guides, and keyboard shortcuts (Ctrl/Cmd+S, Ctrl+`, F5 run, F9 breakpoint).
+- Packaging: `packaging/windows/` (PyInstaller spec + Inno Setup script + `build_windows.ps1`) produces `release/IStudioIDE-Setup-<version>.exe` and a portable `istudio-ide-<version>-win-x64.zip`; `packaging/linux/` and `packaging/macos/` produce portable tarball / DMG builds in CI.
+- CI: tag-driven `release.yml` builds platform installers, runs pytest, and creates a draft GitHub Release with combined SHA-256 `checksums.txt` and `RELEASE_NOTES.md` body; `ide-release.yml` builds the Windows app on PRs and manual dispatch.
 - Packaging: wheel now ships all 15 packages from `src/` plus the `stdlib/urubuga.i` framework source and `py.typed` markers; `i` console script installs and runs.
 - CLI: `i --version`, clean diagnostics for lexical/parse errors, `-o` bytecode artifact output, and a `__main__` guard for `vm.virtual_machine`.
+- I Studio: `istudio` console script (standalone CLI for the IDE platform, equivalent to `isoko istudio`); `--format json` for `istudio lint`; user guide at `docs/istudio/`.
+- I Studio Desktop: `istudio-desktop` console script and `istudio desktop [path]` CLI subcommand launching a tkinter GUI IDE (`istudio.desktop`) — tabbed code editor with syntax highlighting, gutter breakpoints, bracket matching; live diagnostics, autocomplete, hover, go-to-definition, formatting, symbols outline; F5 run against the real compiler/VM; file explorer, Problems/Output/Run panels, four themes, autosave. Headless-testable controller/runner/highlight/theme modules.
+- I Studio engine: `EditorEngine.create_tab` (untitled tabs) and `EditorEngine.save_file_as`.
 - Language: `andika` print statement; word comparison operators `irenze` (`>`), `munsi` / `munsi_ya` (`<`).
 - Runtime: legacy VM function dispatch (`_collect_functions`, `_call`, `_call_function`) with recursion and scope cleanup; for/for-each iteration on legacy stack semantics.
 - `isoko`: `isoko run` resolves files via absolute path; registry tokens stored with owner-only permissions.
@@ -22,8 +30,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `pyproject.toml`: `packages.find where = ["src"]`, package-data for `stdlib/*.i`.
 
 ### Fixed
+- IDE server router now resolves the longest matching route prefix, so nested `/api/projects/...` endpoints (current/recent/create/open) are no longer shadowed by `/api/projects`.
 - Empty wheel (packages excluded by `where = ["."]`).
 - CLI crash on `LexerError`/`ParseError` (non-exception dataclasses caught as exceptions).
+- `isoko istudio lint` crashed on the bridge parser (`Namespace` missing `format`); profile/extension bridge subcommands now parse `--name` / `--path` for parity with the standalone CLI.
 - `examples/loops.i` step-expression parse guard and legacy-VM local-slot reuse.
 - `isoko run` failing when invoked from a directory other than the target file's directory.
 

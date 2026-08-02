@@ -37,11 +37,11 @@ adapter.connect(ConnectionConfig(db_type=DatabaseType.SQLITE))
 repo = Repository(User, adapter)
 repo.create_table()
 
-user = User(name="I Developer", email="dev@i-lang.rw")
+user = User(name="I Developer", email="dev@example.com")
 repo.save(user)
 
 all_users = repo.all()
-found = repo.find(email="dev@i-lang.rw")
+found = repo.find(email="dev@example.com")
 ```
 
 ## Change Tracking

@@ -19,6 +19,7 @@ from src.istudio.itegeko import (
     cmd_extension,
     cmd_collaboration,
     cmd_server,
+    cmd_desktop,
     register_subcommands,
     genda,
 )
@@ -255,3 +256,75 @@ def test_cmd_collaboration_review():
 def test_cmd_collaboration_review_list():
     args = _make_args("istudio", action="review-list", id="", istudio_command="collaboration")
     assert cmd_collaboration(args) == 0
+
+
+def test_cmd_lint_bridge_defaults():
+    fname = _write_temp_file(".i", "undefined variable")
+    try:
+        args = _make_args("istudio", file=fname, istudio_command="lint")
+        assert cmd_lint(args) == 1
+    finally:
+        os.unlink(fname)
+
+
+def test_cmd_profile_bridge_defaults():
+    args = _make_args("istudio", action="start", type="cpu", istudio_command="profile")
+    assert cmd_profile(args) == 0
+
+
+def test_cmd_extension_bridge_defaults():
+    args = _make_args("istudio", action="install", id=None, istudio_command="extension")
+    assert cmd_extension(args) == 0
+
+
+def test_genda_lint_clean():
+    fname = _write_temp_file(".i", "function main() {}")
+    try:
+        args = _make_args("istudio", file=fname, istudio_command="lint")
+        assert genda(args) == 0
+    finally:
+        os.unlink(fname)
+
+
+def test_register_desktop_subcommand():
+    parser = argparse.ArgumentParser()
+    subparsers = parser.add_subparsers(dest="command")
+    register_subcommands(subparsers)
+    args = parser.parse_args(["istudio", "desktop"])
+    assert args.istudio_command == "desktop"
+    args2 = parser.parse_args(["istudio", "desktop", "some/folder"])
+    assert args2.path == "some/folder"
+
+
+def test_cmd_desktop_requires_display(monkeypatch):
+    monkeypatch.setattr("src.istudio.desktop.is_available", lambda: False)
+    args = _make_args("istudio", path=None, istudio_command="desktop")
+    assert cmd_desktop(args) == 1
+
+
+def test_cmd_desktop_launches(monkeypatch):
+    calls = {}
+    monkeypatch.setattr("src.istudio.desktop.is_available", lambda: True)
+
+    def fake_main(argv):
+        calls["argv"] = argv
+        return 0
+
+    monkeypatch.setattr("src.istudio.desktop.main", fake_main)
+    args = _make_args("istudio", path=".", istudio_command="desktop")
+    assert cmd_desktop(args) == 0
+    assert calls["argv"] == ["."]
+
+
+def test_cmd_desktop_no_path(monkeypatch):
+    calls = {}
+    monkeypatch.setattr("src.istudio.desktop.is_available", lambda: True)
+
+    def fake_main(argv):
+        calls["argv"] = argv
+        return 0
+
+    monkeypatch.setattr("src.istudio.desktop.main", fake_main)
+    args = _make_args("istudio", path=None, istudio_command="desktop")
+    assert cmd_desktop(args) == 0
+    assert calls["argv"] == []

@@ -124,6 +124,9 @@ def _parse_toml_simple(text: str) -> Dict[str, Any]:
     current_table = result
     table_path: List[str] = []
 
+    if text.startswith("\ufeff"):
+        text = text.lstrip("\ufeff")
+
     for line in text.splitlines():
         line = line.strip()
         if not line or line.startswith("#"):
@@ -260,10 +263,10 @@ def load(path: str) -> Manifest:
     m._path = path
 
     if path.endswith(".json"):
-        with open(path, "r", encoding="utf-8") as f:
+        with open(path, "r", encoding="utf-8-sig") as f:
             data = json.load(f)
     elif path.endswith(".toml"):
-        with open(path, "r", encoding="utf-8") as f:
+        with open(path, "r", encoding="utf-8-sig") as f:
             data = _parse_toml_simple(f.read())
     else:
         # Try both

@@ -5,11 +5,11 @@ from __future__ import annotations
 import os
 import subprocess
 import sys
-from typing import List, Optional
 
 from isoko import output
-from isoko.manifest import Manifest, load as load_manifest, find_manifest
 from isoko.lockfile import find_lockfile
+from isoko.manifest import find_manifest
+from isoko.manifest import load as load_manifest
 
 
 def add_subparser(subparsers) -> None:
@@ -35,8 +35,12 @@ def run(args) -> int:
         return 1
 
     release = getattr(args, "release", False)
-    target = getattr(args, "target", None)
+    target = (getattr(args, "target", None) or "bytecode").lower()
     out_dir = getattr(args, "out", "build")
+
+    if target != "bytecode":
+        output.error(f"unsupported target: {target} (supported: bytecode)")
+        return 1
 
     mode = "release" if release else "dev"
     output.header(f"Building {m.full_name} ({mode} mode)")
@@ -65,37 +69,50 @@ def run(args) -> int:
 
     output.info(f"Found {len(i_files)} source file(s)")
 
-    # Invoke the compiler
-    os.makedirs(os.path.join(project_dir, out_dir), exist_ok=True)
+    # Invoke the compiler once per source file
+    out_root = os.path.join(project_dir, out_dir)
+    os.makedirs(out_root, exist_ok=True)
 
-    try:
-        result = subprocess.run(
-            [sys.executable, "-m", "compiler.compiler",
-             lib_dir, "--output", out_dir,
-             "--target", target or "bytecode"],
-            capture_output=True,
-            text=True,
-            cwd=project_dir,
-        )
-        if result.returncode == 0:
-            output.success(f"Build completed successfully")
-            output.dim(f"  Output: {out_dir}/")
+    failures = 0
+    for i_file in i_files:
+        rel = os.path.relpath(i_file, lib_dir)
+        out_name = os.path.splitext(rel)[0] + ".ipyc"
+        out_path = os.path.join(out_root, out_name)
+        os.makedirs(os.path.dirname(out_path), exist_ok=True)
+
+        try:
+            result = subprocess.run(
+                [sys.executable, "-m", "compiler.compiler",
+                 i_file, "-o", out_path],
+                capture_output=True,
+                text=True,
+                cwd=project_dir,
+            )
+            if result.returncode == 0:
+                output.success(f"  {rel} -> {os.path.relpath(out_path, project_dir)}")
+            else:
+                failures += 1
+                output.error(f"  {rel}: build failed")
+                if result.stderr:
+                    print(result.stderr, file=sys.stderr)
+        except FileNotFoundError:
+            output.warning("Compiler not available. Install the I compiler first.")
+            output.success(f"Build plan: {len(i_files)} file(s) -> {out_dir}/")
             return 0
-        else:
-            output.error("Build failed")
-            if result.stderr:
-                print(result.stderr, file=sys.stderr)
+        except Exception as e:
+            output.error(f"build failed: {e}")
             return 1
-    except FileNotFoundError:
-        output.warning("Compiler not available. Install the I compiler first.")
-        output.success(f"Build plan: {len(i_files)} file(s) -> {out_dir}/")
-        return 0
-    except Exception as e:
-        output.error(f"build failed: {e}")
+
+    if failures:
+        output.error(f"Build failed: {failures} file(s)")
         return 1
 
+    output.success("Build completed successfully")
+    output.dim(f"  Output: {out_dir}/")
+    return 0
 
-def _find_i_files(directory: str) -> List[str]:
+
+def _find_i_files(directory: str) -> list[str]:
     """Recursively find all .i files in a directory."""
     result = []
     for root, _, files in os.walk(directory):

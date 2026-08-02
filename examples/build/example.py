@@ -6,14 +6,15 @@ Demonstrates how to use the build system to compile an I project.
 
 from pathlib import Path
 
-from src.compiler.core.build import (
+from compiler.core.build import (
+    BuildConfig,
     BuildPipeline,
     BuildTask,
     TaskType,
     TaskResult,
     BuildProfile,
 )
-from src.compiler.core.workspace import Workspace
+from compiler.core.workspace import Workspace
 
 
 def example_simple_build():

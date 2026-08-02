@@ -1,6 +1,6 @@
 # I Programming Language Master Plan (IPMP)
 
-**Version 1.0 — July 2026**
+**Version 1.0 â€” July 2026**
 **Status: Approved**
 **Classification: Public**
 
@@ -462,23 +462,23 @@ The I compiler follows a multi-stage pipeline:
 
 ```
 Source Code
-    ↓
+    â†“
 Lexer (Tokenization)
-    ↓
+    â†“
 Parser (AST Generation)
-    ↓
+    â†“
 Semantic Analyzer (Scope Resolution)
-    ↓
+    â†“
 Type Checker (Type Inference & Validation)
-    ↓
+    â†“
 IR Generator (Intermediate Representation)
-    ↓
+    â†“
 Optimizer (Performance Optimization)
-    ↓
+    â†“
 Bytecode Generator (Bytecode Production)
-    ↓
+    â†“
 Virtual Machine (Execution)
-    ↓
+    â†“
 Native Compiler (Future: Machine Code)
 ```
 
@@ -530,30 +530,30 @@ Native Compiler (Future: Machine Code)
 
 ```
 stdlib/
-├── core/           # Fundamental types and functions
-├── collections/    # Data structures
-├── io/            # Input/output operations
-├── text/          # String manipulation
-├── math/          # Mathematical functions
-├── time/          # Date and time operations
-├── os/            # Operating system interface
-├── net/           # Networking
-├── database/      # Database connectivity
-├── crypto/        # Cryptography
-├── concurrency/   # Parallel execution
-├── ffi/           # Foreign function interface
-├── testing/       # Testing utilities
-└── debug/         # Debugging utilities
+â”œâ”€â”€ core/           # Fundamental types and functions
+â”œâ”€â”€ collections/    # Data structures
+â”œâ”€â”€ io/            # Input/output operations
+â”œâ”€â”€ text/          # String manipulation
+â”œâ”€â”€ math/          # Mathematical functions
+â”œâ”€â”€ time/          # Date and time operations
+â”œâ”€â”€ os/            # Operating system interface
+â”œâ”€â”€ net/           # Networking
+â”œâ”€â”€ database/      # Database connectivity
+â”œâ”€â”€ crypto/        # Cryptography
+â”œâ”€â”€ concurrency/   # Parallel execution
+â”œâ”€â”€ ffi/           # Foreign function interface
+â”œâ”€â”€ testing/       # Testing utilities
+â””â”€â”€ debug/         # Debugging utilities
 ```
 
 ### 4.4.2 Module Dependencies
 
 ```
-core ← collections, text, math
-io ← net, database
-os ← io, file system
-concurrency ← async/await, channels
-crypto ← math, io
+core â† collections, text, math
+io â† net, database
+os â† io, file system
+concurrency â† async/await, channels
+crypto â† math, io
 ```
 
 ---
@@ -744,7 +744,7 @@ Language Server Protocol implementation for IDE support.
 ### 6.1.1 RFC Lifecycle
 
 ```
-Draft → Active → Review → Accepted/Rejected/Postponed → Implemented
+Draft â†’ Active â†’ Review â†’ Accepted/Rejected/Postponed â†’ Implemented
 ```
 
 ### 6.1.2 Discussion Periods
@@ -847,7 +847,7 @@ Draft → Active → Review → Accepted/Rejected/Postponed → Implemented
 
 Versions close to the present contain concrete engineering milestones. Versions farther in the future describe strategic goals, research directions, and ecosystem maturity.
 
-## 7.2 Version 0.x — Prototype (2026-2027)
+## 7.2 Version 0.x â€” Prototype (2026-2027)
 
 **Vision: "Build the foundation."**
 
@@ -871,7 +871,7 @@ Versions close to the present contain concrete engineering milestones. Versions 
 - [ ] Documentation exists
 - [ ] Community of 100+ members
 
-## 7.3 Version 1.x — Production (2027-2029)
+## 7.3 Version 1.x â€” Production (2027-2029)
 
 **Vision: "Ready for real work."**
 
@@ -897,7 +897,7 @@ Versions close to the present contain concrete engineering milestones. Versions 
 - [ ] 100+ production deployments
 - [ ] University curriculum adoption
 
-## 7.4 Version 2.x — Performance (2029-2031)
+## 7.4 Version 2.x â€” Performance (2029-2031)
 
 **Vision: "Fast enough for anything."**
 
@@ -916,7 +916,7 @@ Versions close to the present contain concrete engineering milestones. Versions 
 - Region-based memory
 - Cache-friendly data structures
 
-## 7.5 Version 3.x — Self-Hosting (2031-2033)
+## 7.5 Version 3.x â€” Self-Hosting (2031-2033)
 
 **Vision: "Eat your own dog food."**
 
@@ -935,7 +935,7 @@ Versions close to the present contain concrete engineering milestones. Versions 
 - Linear types (basic)
 - Compile-time computation
 
-## 7.6 Version 4.x — Cloud (2033-2035)
+## 7.6 Version 4.x â€” Cloud (2033-2035)
 
 **Vision: "Born in the cloud."**
 
@@ -954,7 +954,7 @@ Versions close to the present contain concrete engineering milestones. Versions 
 - Event-driven architecture
 - Service mesh integration
 
-## 7.7 Version 5.x — AI (2035-2037)
+## 7.7 Version 5.x â€” AI (2035-2037)
 
 **Vision: "Intelligence built in."**
 
@@ -973,7 +973,7 @@ Versions close to the present contain concrete engineering milestones. Versions 
 - Distributed training
 - Model optimization
 
-## 7.8 Version 6.x — Distributed Computing (2037-2039)
+## 7.8 Version 6.x â€” Distributed Computing (2037-2039)
 
 **Vision: "Scale without limits."**
 
@@ -992,7 +992,7 @@ Versions close to the present contain concrete engineering milestones. Versions 
 - Pipeline parallelism
 - Consensus protocols
 
-## 7.9 Version 7.x — Systems Programming (2039-2041)
+## 7.9 Version 7.x â€” Systems Programming (2039-2041)
 
 **Vision: "Safe systems programming."**
 
@@ -1011,7 +1011,7 @@ Versions close to the present contain concrete engineering milestones. Versions 
 - Inline assembly
 - Interrupt handling
 
-## 7.10 Version 8.x — Game Development (2041-2043)
+## 7.10 Version 8.x â€” Game Development (2041-2043)
 
 **Vision: "Games that move people."**
 
@@ -1030,7 +1030,7 @@ Versions close to the present contain concrete engineering milestones. Versions 
 - Physics simulation
 - AI for games
 
-## 7.11 Version 9.x — Scientific Computing (2043-2045)
+## 7.11 Version 9.x â€” Scientific Computing (2043-2045)
 
 **Vision: "Science that changes the world."**
 
@@ -1049,7 +1049,7 @@ Versions close to the present contain concrete engineering milestones. Versions 
 - Multi-scale simulation
 - Reproducible research
 
-## 7.12 Version 10.x — Enterprise Platform (2045-2047)
+## 7.12 Version 10.x â€” Enterprise Platform (2045-2047)
 
 **Vision: "Enterprise-grade, community-owned."**
 
@@ -1068,7 +1068,7 @@ Versions close to the present contain concrete engineering milestones. Versions 
 - Access control
 - Enterprise integration
 
-## 7.13 Versions 11.x-20.x — Maturation (2047-2053)
+## 7.13 Versions 11.x-20.x â€” Maturation (2047-2053)
 
 **Vision: "Refinement and stability."**
 
@@ -1077,7 +1077,7 @@ Versions close to the present contain concrete engineering milestones. Versions 
 - Cultural impact and preservation
 - Global adoption and recognition
 
-## 7.14 Versions 21.x-30.x — Legacy (2053-2056)
+## 7.14 Versions 21.x-30.x â€” Legacy (2053-2056)
 
 **Vision: "A language for the ages."**
 
@@ -1097,32 +1097,32 @@ Versions close to the present contain concrete engineering milestones. Versions 
 
 ```
 I Programming Language
-├── General
-│   ├── #general
-│   ├── #introductions
-│   └── #off-topic
-├── Development
-│   ├── #compiler
-│   ├── #stdlib
-│   ├── #frameworks
-│   └── #tools
-├── Frameworks
-│   ├── #urubuga
-│   ├── #ibiro
-│   ├── #mobile
-│   ├── #ubwenge
-│   ├── #imikino
-│   ├── #sisitemu
-│   └── #igicu
-├── Community
-│   ├── #help
-│   ├── #showcase
-│   ├── #events
-│   └── #jobs
-└── Voice
-    ├── General Voice
-    ├── Development Voice
-    └── Events Voice
+â”œâ”€â”€ General
+â”‚   â”œâ”€â”€ #general
+â”‚   â”œâ”€â”€ #introductions
+â”‚   â””â”€â”€ #off-topic
+â”œâ”€â”€ Development
+â”‚   â”œâ”€â”€ #compiler
+â”‚   â”œâ”€â”€ #stdlib
+â”‚   â”œâ”€â”€ #frameworks
+â”‚   â””â”€â”€ #tools
+â”œâ”€â”€ Frameworks
+â”‚   â”œâ”€â”€ #urubuga
+â”‚   â”œâ”€â”€ #ibiro
+â”‚   â”œâ”€â”€ #mobile
+â”‚   â”œâ”€â”€ #ubwenge
+â”‚   â”œâ”€â”€ #imikino
+â”‚   â”œâ”€â”€ #sisitemu
+â”‚   â””â”€â”€ #igicu
+â”œâ”€â”€ Community
+â”‚   â”œâ”€â”€ #help
+â”‚   â”œâ”€â”€ #showcase
+â”‚   â”œâ”€â”€ #events
+â”‚   â””â”€â”€ #jobs
+â””â”€â”€ Voice
+    â”œâ”€â”€ General Voice
+    â”œâ”€â”€ Development Voice
+    â””â”€â”€ Events Voice
 ```
 
 ### 8.1.2 GitHub
@@ -1451,7 +1451,7 @@ I's future will be:
 
 ## Appendix A: Language Specification Reference
 
-The complete language specification is maintained in a separate document: `docs-specification/LANGUAGE_SPECIFICATION.md`
+The complete language specification is maintained in a separate document: `docs/specification/LANGUAGE_SPECIFICATION.md`
 
 Key topics:
 - Lexical analysis

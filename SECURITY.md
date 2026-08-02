@@ -33,11 +33,10 @@ If you discover a security vulnerability in the I Programming Language, please r
 - Exploit the vulnerability for any purpose
 
 **DO**:
-- Send an email to security@i-lang.rw
+- Send an email to irabizipaisiblevalentin@gmail.com
 - Include detailed information about the vulnerability
 - Provide steps to reproduce the issue
 - Suggest a fix if possible
-
 ### What to Include
 
 Your report should include:
@@ -212,9 +211,9 @@ The security team is responsible for:
 
 ### Contact
 
-- **Email**: security@i-lang.rw
+- **Email**: irabizipaisiblevalentin@gmail.com
 - **PGP Key**: Available on request
-- **GitHub**: @i-lang/security-team
+- **GitHub**: https://github.com/irabizipaisiblevalentin/I
 
 ## Security Resources
 

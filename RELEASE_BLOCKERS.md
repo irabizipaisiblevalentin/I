@@ -1,5 +1,9 @@
 # Release Blockers — I Language v1.0
 
+> **SUPERSEDED (2026-08-01)** by `RELEASE_READINESS_REPORT.md`. This file
+> reflects the earlier RC1 scope; the current v1.0.0 status is tracked in the
+> readiness report.
+
 **Owner:** Release Stabilization Team
 **Date:** 2026-07-31
 **Category legend:**

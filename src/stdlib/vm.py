@@ -12,7 +12,7 @@ from typing import Any, Optional
 
 def version() -> str:
     """Return the IVM version."""
-    return "0.1.0"
+    return "1.0.0"
 
 
 def create_vm(config: Optional[Any] = None) -> Any:

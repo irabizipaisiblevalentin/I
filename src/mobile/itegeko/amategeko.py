@@ -142,7 +142,7 @@ def _gushya(args: argparse.Namespace) -> int:
         f'# Activity setup\n'
         f'activity Inyandikorero extends Ikiganiro:\n'
         f'    izina: "{izina}"\n'
-        f'    urugero: "https://i-lang.rw/app"\n'
+        f'    urugero: "https://example.com/app"\n'
         f'\n'
         f'    onCreate:\n'
         f'        self.title = "Murakaza neza"\n'

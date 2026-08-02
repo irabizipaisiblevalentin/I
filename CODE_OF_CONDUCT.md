@@ -34,7 +34,7 @@ This Code of Conduct applies both within project spaces and in public spaces whe
 
 ## Enforcement
 
-Instances of abusive, harassing, or otherwise unacceptable behavior may be reported by contacting the project team at conduct@i-lang.rw. The project team will review and investigate all complaints and will respond in a way that it deems appropriate to the circumstances. The project team is obligated to maintain confidentiality with regard to the reporter of an incident. Project maintainers who do not follow or enforce the Code of Conduct in good faith may face temporary or permanent repercussions as determined by other members of the project's leadership.
+Instances of abusive, harassing, or otherwise unacceptable behavior may be reported by contacting the project team at irabizipaisiblevalentin@gmail.com. The project team will review and investigate all complaints and will respond in a way that it deems appropriate to the circumstances. The project team is obligated to maintain confidentiality with regard to the reporter of an incident. Project maintainers who do not follow or enforce the Code of Conduct in good faith may face temporary or permanent repercussions as determined by other members of the project's leadership.
 
 ## Attribution
 
@@ -87,7 +87,7 @@ We are building a language for the next 30 years. We expect:
 
 If you experience or witness unacceptable behavior, please:
 
-1. **Contact the conduct team**: conduct@i-lang.rw
+1. **Contact the conduct team**: irabizipaisiblevalentin@gmail.com
 2. **Provide details**: Include dates, times, and specific behavior
 3. **Stay confidential**: Reports will be kept confidential
 4. **Allow time**: Investigation may take time
@@ -123,14 +123,14 @@ For major conflicts:
 
 ## Appeals
 
-Decisions made by the conduct team can be appealed to the governance committee. Appeals should be submitted in writing to appeals@i-lang.rw within 14 days of the decision.
+Decisions made by the conduct team can be appealed to the governance committee. Appeals should be submitted in writing to irabizipaisiblevalentin@gmail.com within 14 days of the decision.
 
 ## Contact
 
 For questions about this Code of Conduct or to report violations:
 
-- **Email**: conduct@i-lang.rw
-- **GitHub**: @i-lang/conduct-team
+- **Email**: irabizipaisiblevalentin@gmail.com
+- **GitHub**: https://github.com/irabizipaisiblevalentin/I
 - **Discord**: #conduct-reporting channel
 
 ---

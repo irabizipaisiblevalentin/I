@@ -320,16 +320,16 @@ YYYY-MM-DD
 - Contributor 2
 
 ## Downloads
-- [Source](https://github.com/i-lang/i-lang/archive/vX.Y.Z.tar.gz)
+- [Source](https://github.com/irabizipaisiblevalentin/I/archive/refs/tags/vX.Y.Z.tar.gz)
 - [PyPI](https://pypi.org/project/i-lang/X.Y.Z/)
 ```
 
 ### Announcement Channels
 
 - **GitHub Releases**: Primary announcement
-- **Mailing List**: i-lang-announce@googlegroups.com
-- **Blog**: blog.i-lang.rw
-- **Twitter**: @i_lang
+- **GitHub Discussions**: `https://github.com/irabizipaisiblevalentin/I/discussions`
+- **Blog**: Blog posts are announced via GitHub Releases and Discussions
+- **Twitter**: `@i_lang`
 - **Discord**: #announcements channel
 - **Reddit**: r/i_lang
 
@@ -386,7 +386,7 @@ Rollback if:
    - Watch Discord
 
 2. **Monitor for Security Issues**
-   - Watch security@i-lang.rw
+   - Watch irabizipaisiblevalentin@gmail.com
    - Watch CVE database
    - Watch security advisories
 

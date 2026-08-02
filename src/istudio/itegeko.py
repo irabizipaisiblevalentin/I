@@ -77,6 +77,17 @@ def create_parser() -> argparse.ArgumentParser:
     p_server = subparsers.add_parser("server", help="Start I Studio language server")
     p_server.add_argument("--stdio", action="store_true", help="Use stdio transport")
 
+    p_desktop = subparsers.add_parser("desktop", help="Launch the I Studio desktop application")
+    p_desktop.add_argument("path", nargs="?", default=None, help="Optional folder to open as a workspace")
+
+    p_ide = subparsers.add_parser("ide", help="Launch the I Studio IDE (native window by default)")
+    p_ide.add_argument("path", nargs="?", default=None, help="workspace/project folder to open")
+    p_ide.add_argument("--host", default="127.0.0.1", help="bind host (default: 127.0.0.1)")
+    p_ide.add_argument("--port", type=int, default=8790, help="bind port (default: 8790)")
+    p_ide.add_argument("--no-open", action="store_true", help="do not open a browser automatically")
+    p_ide.add_argument("--browser", action="store_true", help="open in the default web browser instead of a native window")
+    p_ide.add_argument("--base-dir", default=None, help="directory that stores created projects")
+
     return parser
 
 
@@ -131,7 +142,8 @@ def cmd_lint(args: argparse.Namespace) -> int:
         with open(args.file, "r", encoding="utf-8") as f:
             content = f.read()
         diagnostics = ls.analyze(content, args.file)
-        if args.format == "json":
+        output_format = getattr(args, "format", "text")
+        if output_format == "json":
             print(json.dumps([{
                 "severity": d.severity.value,
                 "message": d.message,
@@ -189,7 +201,7 @@ def cmd_profile(args: argparse.Namespace) -> int:
     profiler = Profiler()
     if args.action == "start":
         ptype = ProfilerType(args.type)
-        sid = profiler.start_session(args.name, ptype)
+        sid = profiler.start_session(getattr(args, "name", "session"), ptype)
         print(json.dumps({"status": "started", "session_id": sid}))
     elif args.action == "stop":
         result = profiler.stop_session()
@@ -245,8 +257,9 @@ def cmd_ai(args: argparse.Namespace) -> int:
 def cmd_extension(args: argparse.Namespace) -> int:
     em = ExtensionManager()
     if args.action == "install":
-        if args.path:
-            manifest = em.install_plugin(args.path)
+        plugin_path = getattr(args, "path", None)
+        if plugin_path:
+            manifest = em.install_plugin(plugin_path)
             print(json.dumps({"status": "ok", "id": manifest.id, "name": manifest.name}))
         else:
             print("--path required for install")
@@ -327,6 +340,37 @@ def cmd_server(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_desktop(args: argparse.Namespace) -> int:
+    """Launch the I Studio desktop application (tkinter)."""
+    try:
+        from .desktop import is_available, main as desktop_main
+    except Exception as exc:  # pragma: no cover
+        print(f"Could not load desktop application: {exc}", file=sys.stderr)
+        return 1
+    if not is_available():
+        print("I Studio Desktop requires a graphical display (tkinter).", file=sys.stderr)
+        return 1
+    argv = [args.path] if getattr(args, "path", None) else []
+    return desktop_main(argv)
+
+
+def cmd_ide(args: argparse.Namespace) -> int:
+    """Launch the I Studio web IDE server."""
+    from .ide.main import main as ide_main
+
+    argv: list[str] = []
+    if getattr(args, "path", None):
+        argv.append(args.path)
+    argv += ["--host", args.host, "--port", str(args.port)]
+    if getattr(args, "no_open", False):
+        argv.append("--no-open")
+    if getattr(args, "browser", False):
+        argv.append("--browser")
+    if getattr(args, "base_dir", None):
+        argv += ["--base-dir", args.base_dir]
+    return ide_main(argv)
+
+
 def main(argv: Optional[List[str]] = None) -> int:
     parser = create_parser()
     args = parser.parse_args(argv)
@@ -344,6 +388,8 @@ def main(argv: Optional[List[str]] = None) -> int:
         "extension": cmd_extension,
         "collaboration": cmd_collaboration,
         "server": cmd_server,
+        "desktop": cmd_desktop,
+        "ide": cmd_ide,
     }
     return commands[args.command](args)
 
@@ -366,6 +412,7 @@ def register_subcommands(subparsers: Any) -> None:
 
     p_lint = ip_se.add_parser("lint", help="Lint a file")
     p_lint.add_argument("file")
+    p_lint.add_argument("--format", choices=["text", "json"], default="text", help="Output format")
     p_lint.set_defaults(func=lambda a: cmd_lint(a) or 0)
 
     p_fmt = ip_se.add_parser("format", help="Format a file")
@@ -378,6 +425,7 @@ def register_subcommands(subparsers: Any) -> None:
     p_prof = ip_se.add_parser("profile", help="Profiling commands")
     p_prof.add_argument("action", choices=["start", "stop", "list", "results"])
     p_prof.add_argument("--type", default="cpu", choices=["cpu", "memory"])
+    p_prof.add_argument("--name", default="session")
 
     p_ai = ip_se.add_parser("ai", help="AI Assistant commands")
     p_ai.add_argument("action", choices=["chat", "conversations"])
@@ -389,6 +437,7 @@ def register_subcommands(subparsers: Any) -> None:
     p_ext = ip_se.add_parser("extension", help="Extension management")
     p_ext.add_argument("action", choices=["install", "uninstall", "list", "enable", "disable"])
     p_ext.add_argument("id", nargs="?")
+    p_ext.add_argument("--path", help="Manifest path for install")
 
     p_collab = ip_se.add_parser("collaboration", help="Collaboration commands")
     p_collab.add_argument("action", choices=["session-create", "session-list", "user-list", "review-create", "review-list"])
@@ -396,6 +445,17 @@ def register_subcommands(subparsers: Any) -> None:
 
     p_srv = ip_se.add_parser("server", help="Start I Studio language server")
     p_srv.add_argument("--stdio", action="store_true")
+
+    p_desktop = ip_se.add_parser("desktop", help="Launch the I Studio desktop application")
+    p_desktop.add_argument("path", nargs="?", default=None)
+
+    p_ide = ip_se.add_parser("ide", help="Launch the I Studio IDE (native window by default)")
+    p_ide.add_argument("path", nargs="?", default=None)
+    p_ide.add_argument("--host", default="127.0.0.1")
+    p_ide.add_argument("--port", type=int, default=8790)
+    p_ide.add_argument("--no-open", action="store_true")
+    p_ide.add_argument("--browser", action="store_true", help="open in the default web browser instead of a native window")
+    p_ide.add_argument("--base-dir", default=None)
 
 
 def genda(args: argparse.Namespace) -> int:
@@ -414,6 +474,8 @@ def genda(args: argparse.Namespace) -> int:
         "extension": cmd_extension,
         "collaboration": cmd_collaboration,
         "server": cmd_server,
+        "desktop": cmd_desktop,
+        "ide": cmd_ide,
     }
     handler = istudio_commands.get(istudio_cmd)
     if not handler:

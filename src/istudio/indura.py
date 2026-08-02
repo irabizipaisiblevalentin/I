@@ -62,6 +62,38 @@ class EditorEngine:
         self._emit("tab.opened", {"tab": tab})
         return tab
 
+    def create_tab(self, title: str, language: str = "i", content: str = "") -> TabInfo:
+        tab_id = f"untitled:{int(time.time() * 1000)}:{len(self._tabs)}"
+        tab = TabInfo(
+            id=tab_id,
+            title=title,
+            file_path="",
+            language=language,
+            is_dirty=bool(content),
+        )
+        self._tabs[tab_id] = tab
+        self._file_contents[tab_id] = content
+        self._undo_stack[tab_id] = []
+        self._redo_stack[tab_id] = []
+        self._active_tab_id = tab_id
+        self._emit("tab.opened", {"tab": tab})
+        return tab
+
+    def save_file_as(self, tab_id: str, file_path: str) -> bool:
+        if tab_id not in self._tabs:
+            raise EditorError(f"Tab not found: {tab_id}")
+        tab = self._tabs[tab_id]
+        path = Path(file_path).resolve()
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(self._file_contents.get(tab_id, ""), encoding="utf-8")
+        tab.file_path = str(path)
+        tab.title = path.name
+        tab.language = path.suffix.lstrip(".") or tab.language
+        tab.is_dirty = False
+        tab.is_readonly = not os.access(str(path), os.W_OK)
+        self._emit("file.saved", {"tab_id": tab_id, "path": tab.file_path})
+        return True
+
     def close_file(self, tab_id: str) -> bool:
         if tab_id in self._tabs:
             del self._tabs[tab_id]

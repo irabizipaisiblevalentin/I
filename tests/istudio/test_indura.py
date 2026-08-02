@@ -197,3 +197,31 @@ def test_editor_no_active_tab_errors():
         assert False
     except EditorError:
         pass
+
+
+def test_editor_create_tab():
+    e = EditorEngine()
+    tab = e.create_tab("untitled-1.i", language="i", content="andika 1")
+    assert tab.file_path == ""
+    assert tab.is_dirty is True
+    assert e.get_active_tab().id == tab.id
+    assert e.get_content() == "andika 1"
+
+
+def test_editor_create_tab_empty_is_clean():
+    e = EditorEngine()
+    tab = e.create_tab("untitled.i", language="i")
+    assert tab.is_dirty is False
+
+
+def test_editor_save_file_as():
+    e = EditorEngine()
+    tab = e.create_tab("untitled.i", language="i", content="andika 42")
+    with tempfile.TemporaryDirectory() as tmp:
+        target = os.path.join(tmp, "saved.i")
+        assert e.save_file_as(tab.id, target) is True
+        with open(target, "r", encoding="utf-8") as f:
+            assert f.read() == "andika 42"
+        assert e.get_active_tab().title == "saved.i"
+        assert e.get_active_tab().file_path == os.path.abspath(target)
+        assert e.get_active_tab().is_dirty is False

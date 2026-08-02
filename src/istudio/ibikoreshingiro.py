@@ -293,7 +293,7 @@ class PluginManifest:
     version: str = "1.0.0"
     description: str = ""
     author: str = ""
-    min_istudio_version: str = "0.1.0"
+    min_istudio_version: str = "1.0.0"
     entry_point: str = ""
     permissions: List[str] = field(default_factory=list)
     contributes: Dict[str, Any] = field(default_factory=dict)
@@ -674,4 +674,4 @@ class PluginError(IStudioError):
 class BuildError(IStudioError):
     pass
 
-ISTUDIO_VERSION = "0.1.0"
+ISTUDIO_VERSION = "1.0.0"
