@@ -14,7 +14,7 @@ file (all dated 2026-07-31 and reflecting the earlier RC1 scope).
 
 | # | DoD Item | Status |
 |---|---|---|
-| 1 | All tests green | ✅ **4285 passed, 1 skipped** (POSIX-only login-permission test on Windows) |
+| 1 | All tests green | ✅ **4286 passed, 1 skipped** (POSIX-only login-permission test on Windows) |
 | 2 | Version + metadata consistent at 1.0.0 | ✅ `pyproject.toml`, all `__version__` packages, stdlib `compiler`/`vm`, istudio, IDE |
 | 3 | Repo identity points to the official repo | ✅ README, pyproject URLs, CONTRIBUTING, governance, security, release docs; zero `i-lang.rw` / `github.com/i-lang` references |
 | 4 | CI workflows healthy and validated | ✅ `release.yml` (tag-driven, 5 jobs + combined checksums), `ci.yml` (5-OS matrix), `ide-release.yml`, `cd.yml`, `security.yml`; all YAML validated |
@@ -26,7 +26,7 @@ file (all dated 2026-07-31 and reflecting the earlier RC1 scope).
 
 ## 2. Test Suite
 
-- **Backend:** `pytest` full run → **4285 passed, 1 skipped, 0 failed**
+- **Backend:** `pytest` full run → **4286 passed, 1 skipped, 0 failed**
   (90 s). Includes `tests/istudio` (409), stdlib, compiler, vm, e2e, urubuga,
   isoko, ideveloper.
 - **Version test:** `test_stdlib_sprint9.py::TestVM::test_version` updated to
@@ -48,8 +48,8 @@ file (all dated 2026-07-31 and reflecting the earlier RC1 scope).
 
 | Artifact | Size | SHA-256 |
 |---|---|---|
-| `release/IStudioIDE-Setup-1.0.0.exe` | 16.9 MB | `1a1fea93c484557ff1e8dd16da663086eb0896c4f807854d9de08e40aeb065b5` |
-| `release/istudio-ide-1.0.0-win-x64.zip` | 19 MB | `b61f4a508c1954f447aa580d9226d2ed2e8655d3577cdfa3c5ce44977e3c0eea` |
+| `release/IStudioIDE-Setup-1.0.0.exe` | 17.1 MB | `2f13489b746927ddc3c72994787c84c9c29a3cbedca0f780b43ff84cb89ceb55` |
+| `release/istudio-ide-1.0.0-win-x64.zip` | 19.1 MB | `36363338049cff2c59fa828c8beea1431752a67a8e69f2415d7ec185ebf8ff8c` |
 
 - PyPI wheel + sdist built and verified: `dist/i_lang-1.0.0-py3-none-any.whl`
   (5 console scripts incl. `i`, `isoko`, `istudio-ide`) and
@@ -87,12 +87,12 @@ Implemented as a pywebview (WebView2) native window over the local IDE server:
 
 ## 6. Launch-Day Uploads (require the release machine)
 
-1. **Logo artwork (blocked on user):** the pasted clipboard image cannot be
-   read by this tool. Save it to the repo as `ide/public/logo.svg`/`logo.png`
-   (welcome/favicon) and `packaging/windows/app_icon.ico` (window + installer
-   icon; a placeholder `app.ico` is wired in now).
-2. **Working tree committed** (commit `c2c9f9e`, branch `master`). Configure
-   the git remote and push to `https://github.com/irabizipaisiblevalentin/I`.
+1. **Logo applied (resolved):** `assets/2.png` is now the project logo
+   everywhere — `packaging/windows/app.ico` (exe + installer icon, 7 sizes),
+   `ide/public/logo.png` (welcome screen) and `ide/public/favicon.ico`
+   (browser tab).
+2. **Working tree committed** (branch `master`). Configure the git remote and
+   push to `https://github.com/irabizipaisiblevalentin/I`.
 3. Push tag `v1.0.0` — `release.yml` builds all platform artifacts, runs
    pytest, and creates a **draft** GitHub Release with combined `checksums.txt`
    and `RELEASE_NOTES.md` body.
@@ -103,7 +103,8 @@ Implemented as a pywebview (WebView2) native window over the local IDE server:
 ## 7. Verdict
 
 **READY for launch-day uploads.** All gates pass locally (tests, typecheck,
-builds, installer smoke tests, security audit) and the full working tree is
-committed on `master` (`c2c9f9e`). Remaining work is external:
-founder-supplied logo file, git remote/credentials on the release machine, and
-the push + tag + GitHub Release + PyPI steps in §6.
+builds, installer smoke tests, security audit), the project logo from
+`assets/2.png` is wired into the exe, installer, favicon, and welcome screen,
+and the full working tree is committed on `master`. Remaining work is external:
+git remote/credentials on the release machine, and the push + tag + GitHub
+Release + PyPI steps in §6.

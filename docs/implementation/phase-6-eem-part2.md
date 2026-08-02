@@ -325,11 +325,7 @@ metrics/
 
 | Role | Responsibility | Contact |
 |------|----------------|---------|
-| Chief Architect | Architecture decisions | architecture@ilang-lang.org |
-| Technical Lead | Technical direction | tech-lead@ilang-lang.org |
-| Release Manager | Release process | releases@ilang-lang.org |
-| Security Lead | Security issues | security@ilang-lang.org |
-| Community Lead | Community management | community@ilang-lang.org |
+| Founder and Owner | All project decisions | Irabizi Paisible Valentin |
 
 ---
 

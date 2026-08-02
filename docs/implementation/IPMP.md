@@ -1,6 +1,6 @@
 # I Programming Language Master Plan (IPMP)
 
-**Version 1.0 â€” July 2026**
+**Version 1.0 — July 2026**
 **Status: Approved**
 **Classification: Public**
 
@@ -18,7 +18,7 @@
 | Document Title | I Programming Language Master Plan (IPMP) |
 | Version | 1.0 |
 | Date | July 2026 |
-| Author | I Programming Language Design Council |
+| Author | Irabizi Paisible Valentin |
 | Status | Approved |
 | Review Schedule | Annual (July) |
 | Next Review | July 2027 |
@@ -1629,7 +1629,7 @@ Key topics:
 
 | Version | Date | Author | Changes |
 |---------|------|--------|---------|
-| 1.0 | July 2026 | I Design Council | Initial release |
+| 1.0 | July 2026 | Irabizi Paisible Valentin | Initial release |
 
 ---
 

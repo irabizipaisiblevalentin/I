@@ -1,7 +1,7 @@
 # RFC-001: Standard Library Foundation
 
 - **RFC ID**: 001
-- **Author**: I Programming Language Engineering Council
+- **Author**: Irabizi Paisible Valentin
 - **Status**: Draft
 - **Created**: 2026-07-30
 - **Updated**: 2026-07-30

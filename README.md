@@ -2,6 +2,8 @@
 
 <div align="center">
 
+<img src="assets/2.png" alt="I Programming Language logo" width="160" />
+
 **A programming language designed around Kinyarwanda**
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)

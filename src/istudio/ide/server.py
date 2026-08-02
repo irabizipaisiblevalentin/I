@@ -592,6 +592,14 @@ class IdeApplication:
         def index(h: _Handler, path: str) -> None:
             self._serve_static(h, path)
 
+        @r.route("GET", "/favicon.ico")
+        def favicon(h: _Handler, path: str) -> None:
+            self._serve_static(h, path)
+
+        @r.route("GET", "/logo.png")
+        def logo(h: _Handler, path: str) -> None:
+            self._serve_static(h, path)
+
     def _serve_static(self, h: _Handler, path: str) -> None:
         clean = path.split("?", 1)[0]
         rel = clean if clean != "/" else "/index.html"
@@ -615,6 +623,8 @@ class IdeApplication:
             content_type = "image/svg+xml"
         elif target.endswith(".png"):
             content_type = "image/png"
+        elif target.endswith(".ico"):
+            content_type = "image/x-icon"
         elif target.endswith(".woff2"):
             content_type = "font/woff2"
         elif target.endswith(".json"):

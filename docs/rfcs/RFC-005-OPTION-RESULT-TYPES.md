@@ -1,7 +1,7 @@
 # RFC-005: Option/Result Types
 
 - **RFC ID**: 005
-- **Author**: I Programming Language Engineering Council
+- **Author**: Irabizi Paisible Valentin
 - **Status**: Draft
 - **Created**: 2026-07-30
 - **Updated**: 2026-07-30

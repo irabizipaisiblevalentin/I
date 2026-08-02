@@ -171,6 +171,26 @@ def test_static_assets_served(base_url: str, temp_dir: str) -> None:
     assert body == "console.log('hi');"
 
 
+def test_favicon_and_logo_served(base_url: str, temp_dir: str) -> None:
+    static = os.path.join(temp_dir, "static")
+    os.makedirs(static, exist_ok=True)
+    with open(os.path.join(static, "favicon.ico"), "w", encoding="utf-8") as f:
+        f.write("ICO-CONTENT")
+    with open(os.path.join(static, "logo.png"), "w", encoding="utf-8") as f:
+        f.write("LOGO-CONTENT")
+
+    status, body = _request(f"{base_url}/favicon.ico")
+    assert status == 200
+    assert body == "ICO-CONTENT"
+
+    status, body = _request(f"{base_url}/logo.png")
+    assert status == 200
+    assert body == "LOGO-CONTENT"
+
+    status, _ = _request(f"{base_url}/no-such-file.txt")
+    assert status == 404
+
+
 def test_git_init_commit(base_url: str) -> None:
     _, created = _request(f"{base_url}/api/projects/create", "POST", {"name": "gitproj", "template": "console"})
     root = created["path"]

@@ -16,7 +16,7 @@
 | **Date** | July 2026 |
 | **Status** | **Official** |
 | **Classification** | Governing Document |
-| **Author** | I Programming Language Engineering Council |
+| **Author** | Irabizi Paisible Valentin |
 | **Review Schedule** | Semi-Annual (January, July) |
 | **Next Review** | January 2027 |
 
@@ -475,7 +475,7 @@ Every feature must include:
 
 | Version | Date | Author | Changes |
 |---------|------|--------|---------|
-| 1.0 | July 2026 | I Programming Language Engineering Council | Initial official release |
+| 1.0 | July 2026 | Irabizi Paisible Valentin | Initial official release |
 
 ---
 

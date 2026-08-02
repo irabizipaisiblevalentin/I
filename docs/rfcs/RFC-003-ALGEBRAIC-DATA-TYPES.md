@@ -1,7 +1,7 @@
 # RFC-003: Algebraic Data Types & Pattern Matching
 
 - **RFC ID**: 003
-- **Author**: I Programming Language Engineering Council
+- **Author**: Irabizi Paisible Valentin
 - **Status**: Draft
 - **Created**: 2026-07-30
 - **Updated**: 2026-07-30
