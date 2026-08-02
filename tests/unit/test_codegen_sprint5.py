@@ -6,6 +6,8 @@ Tests the CodeGenerator and bytecode system for the I programming language.
 expressions, functions, data structures, error handling, and integration.
 """
 
+from __future__ import annotations
+
 import pytest
 from compiler.ast.nodes import (
     Program, Module, LiteralExpr, IdentifierExpr, UnaryExpr, BinaryExpr,

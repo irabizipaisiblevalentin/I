@@ -239,7 +239,8 @@ class ProgressBar:
 
     def finish(self) -> None:
         elapsed = time.time() - self._start_time
-        line = f"\r{_fmt(f'  {"█" * 40}', _Style.GREEN)} 100%"
+        bar = "█" * 40
+        line = f"\r{_fmt(f'  {bar}', _Style.GREEN)} 100%"
         if elapsed > 0.1:
             line += _fmt(f" ({elapsed:.1f}s)", _Style.DIM)
         print(line, file=self._out)

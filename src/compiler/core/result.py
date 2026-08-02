@@ -9,7 +9,7 @@ from __future__ import annotations
 
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass
-from typing import Any, TypeVar
+from typing import Any, Generic, TypeVar, Union
 
 T = TypeVar("T")
 U = TypeVar("U")
@@ -17,7 +17,7 @@ E = TypeVar("E")
 
 
 @dataclass(frozen=True)
-class Ok[T]:
+class Ok(Generic[T]):
     """Successful result value."""
 
     value: T
@@ -27,7 +27,7 @@ class Ok[T]:
 
 
 @dataclass(frozen=True)
-class Err[E]:
+class Err(Generic[E]):
     """Error result value."""
 
     error: E
@@ -36,20 +36,20 @@ class Err[E]:
         return f"Err({self.error!r})"
 
 
-type Result[T, E] = Ok[T] | Err[E]
+Result = Union[Ok[T], Err[E]]
 
 
-def is_ok[T](result: Result[T, Any]) -> bool:
+def is_ok(result: Result[T, Any]) -> bool:
     """Check if result is Ok."""
     return isinstance(result, Ok)
 
 
-def is_err[E](result: Result[Any, E]) -> bool:
+def is_err(result: Result[Any, E]) -> bool:
     """Check if result is Err."""
     return isinstance(result, Err)
 
 
-def unwrap[T](result: Result[T, Any]) -> T:
+def unwrap(result: Result[T, Any]) -> T:
     """
     Unwrap result, raising ValueError if Err.
 
@@ -67,7 +67,7 @@ def unwrap[T](result: Result[T, Any]) -> T:
     raise ValueError(f"Called unwrap on Err: {result.error}")
 
 
-def unwrap_or[T](result: Result[T, Any], default: T) -> T:
+def unwrap_or(result: Result[T, Any], default: T) -> T:
     """
     Unwrap result or return default.
 
@@ -83,7 +83,7 @@ def unwrap_or[T](result: Result[T, Any], default: T) -> T:
     return default
 
 
-def unwrap_or_else[T](result: Result[T, Any], fallback: Callable[[Any], T]) -> T:
+def unwrap_or_else(result: Result[T, Any], fallback: Callable[[Any], T]) -> T:
     """
     Unwrap result or compute fallback.
 
@@ -99,7 +99,7 @@ def unwrap_or_else[T](result: Result[T, Any], fallback: Callable[[Any], T]) -> T
     return fallback(result.error)
 
 
-def map[T, E, U](result: Result[T, E], fn: Callable[[T], U]) -> Result[U, E]:
+def map(result: Result[T, E], fn: Callable[[T], U]) -> Result[U, E]:
     """
     Apply function to Ok value.
 
@@ -115,7 +115,7 @@ def map[T, E, U](result: Result[T, E], fn: Callable[[T], U]) -> Result[U, E]:
     return result
 
 
-def map_err[T, E](result: Result[T, E], fn: Callable[[E], Any]) -> Result[T, Any]:
+def map_err(result: Result[T, E], fn: Callable[[E], Any]) -> Result[T, Any]:
     """
     Apply function to Err value.
 
@@ -131,7 +131,7 @@ def map_err[T, E](result: Result[T, E], fn: Callable[[E], Any]) -> Result[T, Any
     return result
 
 
-def and_then[T, E, U](result: Result[T, E], fn: Callable[[T], Result[U, E]]) -> Result[U, E]:
+def and_then(result: Result[T, E], fn: Callable[[T], Result[U, E]]) -> Result[U, E]:
     """
     Chain result-producing functions.
 
@@ -147,7 +147,7 @@ def and_then[T, E, U](result: Result[T, E], fn: Callable[[T], Result[U, E]]) -> 
     return result
 
 
-def or_else[T, E](result: Result[T, E], fn: Callable[[E], Result[T, Any]]) -> Result[T, Any]:
+def or_else(result: Result[T, E], fn: Callable[[E], Result[T, Any]]) -> Result[T, Any]:
     """
     Recover from error with alternative result.
 
@@ -163,7 +163,7 @@ def or_else[T, E](result: Result[T, E], fn: Callable[[E], Result[T, Any]]) -> Re
     return result
 
 
-def try_all[T, E](results: Sequence[Result[T, E]]) -> Result[list[T], list[E]]:
+def try_all(results: Sequence[Result[T, E]]) -> Result[list[T], list[E]]:
     """
     Collect all Ok values or first Err.
 
@@ -185,7 +185,7 @@ def try_all[T, E](results: Sequence[Result[T, E]]) -> Result[list[T], list[E]]:
     return Ok(values)
 
 
-def partition[T, E](results: Sequence[Result[T, E]]) -> tuple[list[T], list[E]]:
+def partition(results: Sequence[Result[T, E]]) -> tuple[list[T], list[E]]:
     """
     Separate results into ok values and errors.
 
@@ -206,7 +206,7 @@ def partition[T, E](results: Sequence[Result[T, E]]) -> tuple[list[T], list[E]]:
 
 
 @dataclass(frozen=True)
-class Some[T]:
+class Some(Generic[T]):
     """Optional value."""
 
     value: T
@@ -223,7 +223,7 @@ class Nothing:
         return "Nothing"
 
 
-type Option[T] = Some[T] | Nothing
+Option = Union[Some[T], Nothing]
 
 
 def is_some(option: Option[Any]) -> bool:

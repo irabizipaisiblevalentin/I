@@ -14,7 +14,7 @@ T = TypeVar("T")
 U = TypeVar("U")
 
 
-def clamp[T](value: T, min_value: T, max_value: T) -> T:
+def clamp(value: T, min_value: T, max_value: T) -> T:
     """
     Clamp a value between min and max.
 
@@ -33,7 +33,7 @@ def clamp[T](value: T, min_value: T, max_value: T) -> T:
     return value
 
 
-def group_by[T, U](items: list[T], key_fn: Callable[[T], U]) -> dict[U, list[T]]:
+def group_by(items: list[T], key_fn: Callable[[T], U]) -> dict[U, list[T]]:
     """
     Group items by a key function.
 
@@ -53,7 +53,7 @@ def group_by[T, U](items: list[T], key_fn: Callable[[T], U]) -> dict[U, list[T]]
     return result
 
 
-def unique[T](items: list[T]) -> list[T]:
+def unique(items: list[T]) -> list[T]:
     """
     Return unique items preserving order.
 
@@ -72,7 +72,7 @@ def unique[T](items: list[T]) -> list[T]:
     return result
 
 
-def flatten[T](items: list[list[T]]) -> list[T]:
+def flatten(items: list[list[T]]) -> list[T]:
     """
     Flatten a list of lists.
 
@@ -85,7 +85,7 @@ def flatten[T](items: list[list[T]]) -> list[T]:
     return [item for sublist in items for item in sublist]
 
 
-def chunks[T](items: list[T], size: int) -> Iterator[list[T]]:
+def chunks(items: list[T], size: int) -> Iterator[list[T]]:
     """
     Split list into chunks.
 
@@ -100,7 +100,7 @@ def chunks[T](items: list[T], size: int) -> Iterator[list[T]]:
         yield items[i:i + size]
 
 
-def find[T](items: list[T], predicate: Callable[[T], bool]) -> T | None:
+def find(items: list[T], predicate: Callable[[T], bool]) -> T | None:
     """
     Find first item matching predicate.
 
@@ -117,7 +117,7 @@ def find[T](items: list[T], predicate: Callable[[T], bool]) -> T | None:
     return None
 
 
-def find_index[T](items: list[T], predicate: Callable[[T], bool]) -> int:
+def find_index(items: list[T], predicate: Callable[[T], bool]) -> int:
     """
     Find index of first item matching predicate.
 
@@ -134,7 +134,7 @@ def find_index[T](items: list[T], predicate: Callable[[T], bool]) -> int:
     return -1
 
 
-def partition[T](items: list[T], predicate: Callable[[T], bool]) -> tuple[list[T], list[T]]:
+def partition(items: list[T], predicate: Callable[[T], bool]) -> tuple[list[T], list[T]]:
     """
     Partition items by predicate.
 
