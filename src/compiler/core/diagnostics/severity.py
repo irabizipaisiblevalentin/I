@@ -2,6 +2,8 @@
 Diagnostic severity levels.
 """
 
+from __future__ import annotations
+
 from enum import IntEnum
 
 
