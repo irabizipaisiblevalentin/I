@@ -27,6 +27,17 @@ class IStudioApp(tk.Tk):
         self.geometry("1200x760")
         self.minsize(800, 500)
 
+        for _icon in (
+            os.path.join(getattr(sys, "_MEIPASS", ""), "app.ico"),
+            os.path.join(os.path.dirname(__file__), "..", "..", "..", "packaging", "windows", "app.ico"),
+        ):
+            if _icon and os.path.isfile(_icon):
+                try:
+                    self.iconbitmap(_icon)
+                except Exception:
+                    pass
+                break
+
         self.controller = DesktopController(workspace_path=workspace_path)
         self.palette = get_palette(self.controller.current_theme())
         self._editors: dict[str, CodeEditor] = {}

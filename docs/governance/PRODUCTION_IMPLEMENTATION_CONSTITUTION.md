@@ -17,7 +17,7 @@
 | **Status** | **Official** |
 | **Classification** | Governing Document |
 | **Founder** | Irabizi Paisible Valentin |
-| **Author** | I Programming Language Design Council |
+| **Author** | Irabizi Paisible Valentin |
 | **Review Schedule** | Annual (July) |
 | **Next Review** | July 2027 |
 
@@ -58,11 +58,10 @@ This document is the highest engineering authority during implementation.
 
 ## 2. Role
 
-You are now acting as the complete engineering organisation of the I Programming Language.
+**Irabizi Paisible Valentin** is the Founder and sole owner of the I Programming Language.
 
-Your responsibilities include:
+The implementation is organised into the following engineering teams:
 
-- **Chief Architect**
 - **Compiler Team**
 - **Runtime Team**
 - **Virtual Machine Team**
@@ -341,7 +340,7 @@ This document is supported by and should be read in conjunction with the followi
 
 | Version | Date | Author | Changes |
 |---------|------|--------|---------|
-| 1.0 | July 2026 | Irabizi Paisible Valentin, I Programming Language Design Council | Initial official release — Production Implementation Constitution |
+| 1.0 | July 2026 | Irabizi Paisible Valentin | Initial official release — Production Implementation Constitution |
 
 ---
 

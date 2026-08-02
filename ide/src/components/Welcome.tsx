@@ -117,9 +117,16 @@ export default function Welcome() {
   return (
     <div className="flex flex-1 flex-col items-center overflow-auto bg-[#1e1e1e] text-white">
       <div className="mt-16 w-full max-w-3xl px-6">
-        <h1 className="text-2xl font-semibold">
-          I <span className="text-[#0e639c]">Studio</span> IDE
-        </h1>
+        <div className="flex items-center gap-3">
+          <img
+            src="/logo.png"
+            alt="I Studio IDE logo"
+            className="h-12 w-12 rounded object-cover"
+          />
+          <h1 className="text-2xl font-semibold">
+            I <span className="text-[#0e639c]">Studio</span> IDE
+          </h1>
+        </div>
         <p className="mt-1 text-sm text-gray-400">
           Start a new project or open an existing one.
         </p>
