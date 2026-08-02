@@ -1,6 +1,6 @@
 # Release Readiness Report — I Language v1.0.0 (Vision 1.0.0)
 
-**Prepared:** 2026-08-01
+**Prepared:** 2026-08-02 (final verification run)
 **Scope:** Full public release of the I Programming Language v1.0.0 and the
 I Studio IDE desktop application, published from
 `https://github.com/irabizipaisiblevalentin/I`.
@@ -14,11 +14,11 @@ file (all dated 2026-07-31 and reflecting the earlier RC1 scope).
 
 | # | DoD Item | Status |
 |---|---|---|
-| 1 | All tests green | ✅ **4250 passed, 1 skipped** (POSIX-only login-permission test on Windows) |
+| 1 | All tests green | ✅ **4285 passed, 1 skipped** (POSIX-only login-permission test on Windows) |
 | 2 | Version + metadata consistent at 1.0.0 | ✅ `pyproject.toml`, all `__version__` packages, stdlib `compiler`/`vm`, istudio, IDE |
 | 3 | Repo identity points to the official repo | ✅ README, pyproject URLs, CONTRIBUTING, governance, security, release docs; zero `i-lang.rw` / `github.com/i-lang` references |
 | 4 | CI workflows healthy and validated | ✅ `release.yml` (tag-driven, 5 jobs + combined checksums), `ci.yml` (5-OS matrix), `ide-release.yml`, `cd.yml`, `security.yml`; all YAML validated |
-| 5 | Windows installer + portable ZIP built and verified | ✅ `release/IStudioIDE-Setup-1.0.0.exe` + `istudio-ide-1.0.0-win-x64.zip`; frozen exe smoke-tested (health, docs, index, project restore) |
+| 5 | Windows installer + portable ZIP built and verified | ✅ `release/IStudioIDE-Setup-1.0.0.exe` + `istudio-ide-1.0.0-win-x64.zip`; frozen exe smoke-tested (health, docs, index, project restore, run/SSE happy path, undefined-var + divide-by-zero error paths, no orphan processes) |
 | 6 | Linux + macOS packaging in place | ✅ `packaging/linux/` (tarball) + `packaging/macos/` (DMG) specs/scripts wired into `release.yml` (buildable in CI) |
 | 7 | Desktop app behaves like a modern IDE | ✅ native window, Open Folder… picker, Explorer "Open with I Studio" context menu, drag-and-drop import, last-workspace restore, command palette, settings, docs view |
 | 8 | Security + dependency audit clean | ✅ secret-scan clean, `pip-audit` no known vulns, `npm audit` 0 vulnerabilities |
@@ -26,15 +26,23 @@ file (all dated 2026-07-31 and reflecting the earlier RC1 scope).
 
 ## 2. Test Suite
 
-- **Backend:** `pytest` full run → **4250 passed, 1 skipped, 0 failed**
-  (130 s). Includes `tests/istudio` (409), stdlib, compiler, vm, e2e, urubuga.
+- **Backend:** `pytest` full run → **4285 passed, 1 skipped, 0 failed**
+  (90 s). Includes `tests/istudio` (409), stdlib, compiler, vm, e2e, urubuga,
+  isoko, ideveloper.
 - **Version test:** `test_stdlib_sprint9.py::TestVM::test_version` updated to
   assert `1.0.0`.
-- **Frontend:** `tsc --noEmit` clean; `npm run build` clean (1127 modules).
+- **Frontend:** `tsc --noEmit` clean; `npm run build` clean; Monaco
+  formatting provider (`formatICode`) wired into the editor.
 - **IDE backend tests:** `pytest tests/istudio` green; router now resolves the
   longest prefix so nested `/api/projects/...` routes work.
 - **Example programs:** `examples/build/example.py` builds under both dev and
   release profiles.
+- **This session's fixes (all regression-tested):** call-argument undefined
+  variables now raise `SEM200_UNDEFINED_VARIABLE` (`andika y`, `andika a+b`,
+  user functions); isoko build rewritten as a per-file bytecode build; isoko
+  manifest parsing tolerates a UTF-8 BOM; registry `search` normalizes all
+  response shapes; stdlib `compile_source` fixed; developer-platform registry
+  persists to `~/.isoko/registry.json`.
 
 ## 3. Release Artifacts (built locally, Windows)
 
@@ -61,6 +69,9 @@ Implemented as a pywebview (WebView2) native window over the local IDE server:
 - **Editor:** Monaco with I syntax highlighting, breakpoints, run/debug,
   command palette (Ctrl+Shift+P / F1), settings (theme/font size/tab
   size/minimap/word wrap), sidebar docs view, integrated terminal.
+- **Extensions:** Activity Bar → Extensions panel backed by
+  `GET /api/extensions{,/browse}` + `POST /api/extensions/install|uninstall`;
+  installed under `ISTUDIO_HOME/extensions` (path-traversal guarded).
 - **Docs:** 7 sealed guides bundled and served at `/docs/...`.
 
 ## 5. Known v1.0 Gaps (deferred to 1.1)
@@ -79,8 +90,8 @@ Implemented as a pywebview (WebView2) native window over the local IDE server:
    read by this tool. Save it to the repo as `ide/public/logo.svg`/`logo.png`
    (welcome/favicon) and `packaging/windows/app_icon.ico` (window + installer
    icon; a placeholder `app.ico` is wired in now).
-2. Commit the working tree (IDE, packaging, CI, docs) and push to
-   `https://github.com/irabizipaisiblevalentin/I`.
+2. **Working tree committed** (commit `c2c9f9e`, branch `master`). Configure
+   the git remote and push to `https://github.com/irabizipaisiblevalentin/I`.
 3. Push tag `v1.0.0` — `release.yml` builds all platform artifacts, runs
    pytest, and creates a **draft** GitHub Release with combined `checksums.txt`
    and `RELEASE_NOTES.md` body.
@@ -91,6 +102,7 @@ Implemented as a pywebview (WebView2) native window over the local IDE server:
 ## 7. Verdict
 
 **READY for launch-day uploads.** All gates pass locally (tests, typecheck,
-builds, installer smoke tests, security audit). Remaining work is external:
+builds, installer smoke tests, security audit) and the full working tree is
+committed on `master` (`c2c9f9e`). Remaining work is external:
 founder-supplied logo file, git remote/credentials on the release machine, and
-the tag + GitHub Release + PyPI steps in §6.
+the push + tag + GitHub Release + PyPI steps in §6.

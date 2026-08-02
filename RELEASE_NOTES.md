@@ -25,7 +25,7 @@ technological independence.
 - **I Studio IDE** — browser-based web IDE (`istudio-ide`, default
   `http://127.0.0.1:8790`) **and** a native Windows desktop app (pywebview) with
   an Inno Setup installer.
-- **Verified quality** — 4,107+ passing tests, cross-platform CI
+- **Verified quality** — 4,285+ passing tests, cross-platform CI
   (Ubuntu/Windows/macOS), ruff/mypy/bandit/safety scans, and a published
   security validation report.
 

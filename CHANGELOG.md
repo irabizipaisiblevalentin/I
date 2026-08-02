@@ -11,6 +11,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - I Studio web IDE (`istudio-ide` console script / `istudio ide` subcommand): browser-based IDE with a React/TypeScript/Monaco frontend (`ide/`) and a stdlib-only Python backend (`src/istudio/ide/`). Edit, run, debug, built-in terminal, project templates, Git panel, and package-manager integration over a local HTTP server (`--host`/`--port`, default `127.0.0.1:8790`).
 - I Studio IDE Windows desktop app: `--app` mode runs the IDE in a native window via pywebview (WebView2). Any folder is a workspace; the installer registers an **Open with I Studio** File Explorer context-menu entry (folder + background), the Welcome screen offers a native **Open Folder…** picker, files dragged from Explorer are imported into the active project, and the last workspace is restored on launch.
 - I Studio IDE features: command palette (Ctrl/Cmd+Shift+P, F1), settings modal + status-bar theme dropdown (theme, font/tab size, minimap, word wrap), sidebar docs view with 7 bundled guides, and keyboard shortcuts (Ctrl/Cmd+S, Ctrl+`, F5 run, F9 breakpoint).
+- I Studio IDE Extensions: Activity Bar → Extensions panel backed by `GET /api/extensions{,/browse}` and `POST /api/extensions/install|uninstall`; extensions install under `ISTUDIO_HOME/extensions` (path-traversal guarded) from the isoko package registry.
+- I Studio IDE Monaco formatting: `formatICode` formatting provider (block indent for `kora`/`iherezo`/`cyangwa`, 4-space units) wired into the editor; `npx tsc --noEmit` clean.
+- `isoko` console script (`isoko = isoko.cli:main`) plus `python -m isoko` / `python -m compiler` entry points.
 - Packaging: `packaging/windows/` (PyInstaller spec + Inno Setup script + `build_windows.ps1`) produces `release/IStudioIDE-Setup-<version>.exe` and a portable `istudio-ide-<version>-win-x64.zip`; `packaging/linux/` and `packaging/macos/` produce portable tarball / DMG builds in CI.
 - CI: tag-driven `release.yml` builds platform installers, runs pytest, and creates a draft GitHub Release with combined SHA-256 `checksums.txt` and `RELEASE_NOTES.md` body; `ide-release.yml` builds the Windows app on PRs and manual dispatch.
 - Packaging: wheel now ships all 15 packages from `src/` plus the `stdlib/urubuga.i` framework source and `py.typed` markers; `i` console script installs and runs.
@@ -36,6 +39,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `isoko istudio lint` crashed on the bridge parser (`Namespace` missing `format`); profile/extension bridge subcommands now parse `--name` / `--path` for parity with the standalone CLI.
 - `examples/loops.i` step-expression parse guard and legacy-VM local-slot reuse.
 - `isoko run` failing when invoked from a directory other than the target file's directory.
+- Call-argument expressions are now analyzed before callee-kind dispatch, so `andika y` / `andika a + b` and user-function calls with undefined arguments raise `SEM200_UNDEFINED_VARIABLE` instead of silently passing.
+- `isoko build` rewritten as a per-file `python -m compiler.compiler <file> -o <out>/<rel>.ipyc` build with `--target bytecode` validation and per-file failure reporting.
+- isoko manifest parsing now tolerates a UTF-8 BOM (`utf-8-sig` read + `\ufeff` strip).
+- isoko registry `search` normalizes bare-list, `{"results"|"objects"|"packages"}`, and nested `package` response shapes to `{name, latest_version, description}`.
+- stdlib `compile_source` called a nonexistent `get_chunk()`; it now uses `Compiler().compile_source(source, filename)` and round-trips via pickle.
+- isoko developer-platform registry (`src/isoko/ideveloper/ububiko.py`) is now persistent (atomic JSON store under `ISOKO_HOME`, default `~/.isoko/registry.json`) with enum/`_to_dict` conversion on load/save.
 
 ### Removed
 - N/A
