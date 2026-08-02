@@ -48,11 +48,12 @@ file (all dated 2026-07-31 and reflecting the earlier RC1 scope).
 
 | Artifact | Size | SHA-256 |
 |---|---|---|
-| `release/IStudioIDE-Setup-1.0.0.exe` | 16.9 MB | `2930d97667f65ee85b5a21167b1fc9974d1cbf85ea716455ced5a77475ffbf2d` |
-| `release/istudio-ide-1.0.0-win-x64.zip` | 19 MB | `fcdd78c11fc69ca7c451247c13714d3847a00ca14c8f45a2c4676c5e3c1ab364` |
+| `release/IStudioIDE-Setup-1.0.0.exe` | 16.9 MB | `1a1fea93c484557ff1e8dd16da663086eb0896c4f807854d9de08e40aeb065b5` |
+| `release/istudio-ide-1.0.0-win-x64.zip` | 19 MB | `b61f4a508c1954f447aa580d9226d2ed2e8655d3577cdfa3c5ce44977e3c0eea` |
 
-- PyPI wheel + sdist built and verified during RC1 (fresh-venv install, `i` CLI,
-  example programs, `isoko new`).
+- PyPI wheel + sdist built and verified: `dist/i_lang-1.0.0-py3-none-any.whl`
+  (5 console scripts incl. `i`, `isoko`, `istudio-ide`) and
+  `dist/i_lang-1.0.0.tar.gz`.
 - CI (`release.yml`) regenerates checksums across dist/ and release/ artifacts
   when the tag is pushed.
 
