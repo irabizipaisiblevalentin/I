@@ -314,12 +314,12 @@ metrics/
 
 | Document | Location | Description |
 |----------|----------|-------------|
-| IPMP | docs-internals/IPMP/IPMP.md | Master Plan |
+| IPMP | docs/implementation/IPMP.md | Master Plan |
 | Language Specification | docs/specification/LANGUAGE_SPECIFICATION.md | Language Spec |
 | Architecture | ARCHITECTURE.md | System Architecture |
-| Implementation Plans | docs-internals/implementation/ | Phase Plans |
-| Evolution | docs-internals/evolution/ | Evolution Documents |
-| Ecosystem | docs-internals/ecosystem/ | Ecosystem Documents |
+| Implementation Plans | docs/implementation/ | Phase Plans |
+| Evolution | docs/evolution/ | Evolution Documents |
+| Ecosystem | docs/ecosystem/ | Ecosystem Documents |
 
 ## Appendix C: Contact Information
 

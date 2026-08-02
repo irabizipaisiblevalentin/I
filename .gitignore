@@ -20,6 +20,7 @@ ide/dist/
 
 # Local state and runtime artifacts
 .istudio-workspace
+_uam_storage.json
 test.wal
 *.wal
 logs/
