@@ -1,6 +1,6 @@
 # I Toolchain Guide
 
-The I 1.0.0 toolchain is Python-based and installs as a single package (`i-lang`). It
+The I 1.0.0 toolchain is Python-based and installs as a single package (`i-program`). It
 provides three layers: the **compiler**, the **virtual machine**, and the **package
 manager**. This guide covers the compiler and runtime; see the
 [isoko Package Manager Guide](isoko-package-manager.md) for project tooling.

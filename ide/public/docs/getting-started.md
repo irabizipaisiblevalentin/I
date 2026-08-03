@@ -43,7 +43,7 @@ python -m pip install -e .
 ### Option B — Install the release wheel
 
 ```bash
-pip install i-lang
+pip install i-program
 ```
 
 ### Verify the installation

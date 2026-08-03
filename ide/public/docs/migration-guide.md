@@ -11,7 +11,7 @@ tooling, and newly supported constructs.
 | Version | `0.1.0` | `1.0.0` everywhere (`pyproject`, all 8 package `__version__`, CLI `--version`) |
 | Package layout | packages discovered from repository root | `packages.find where = ["src"]` — all 15 packages under `src/` |
 | Wheel contents | empty (`where = ["."]`) | all packages + `stdlib/urubuga.i` + `py.typed` |
-| Install | — | `pip install -e .` or `pip install i-lang` |
+| Install | — | `pip install -e .` or `pip install i-program` |
 | Compiler CLI | `python -m compiler.compiler` | `i` console script (module form still works) |
 | Package manager | — | `python -m isoko.cli` |
 | Runtime | — | function dispatch, recursion, scope cleanup, for/for-each fixes |
@@ -30,7 +30,7 @@ with:
 
 ```bash
 python -m pip install -e .        # development
-pip install i-lang                # release
+pip install i-program                # release
 ```
 
 From the repository root, `python -m pip install -e .` installs the `i` console

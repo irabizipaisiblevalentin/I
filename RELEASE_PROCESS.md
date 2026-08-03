@@ -234,7 +234,7 @@ This document describes the release process for the I Programming Language.
 
 2. **Test from Test PyPI**
    ```bash
-   pip install --index-url https://test.pypi.org/simple/ i-lang
+   pip install --index-url https://test.pypi.org/simple/ i-program
    ```
 
 3. **Upload to PyPI**

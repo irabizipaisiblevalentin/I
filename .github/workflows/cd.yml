@@ -37,7 +37,7 @@ jobs:
     needs: build
     environment:
       name: testpypi
-      url: https://test.pypi.org/p/i-lang
+      url: https://test.pypi.org/p/i-program
     permissions:
       id-token: write
     steps:
@@ -57,7 +57,7 @@ jobs:
     needs: [build, deploy-testpypi]
     environment:
       name: pypi
-      url: https://pypi.org/p/i-lang
+      url: https://pypi.org/p/i-program
     permissions:
       id-token: write
     steps:

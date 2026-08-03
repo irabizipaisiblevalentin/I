@@ -39,7 +39,7 @@ The reference implementation is a Python package. Python 3.10+ is required.
 
 ```bash
 # Install the I toolchain
-pip install i-lang
+pip install i-program
 
 # Or build from source
 git clone https://github.com/irabizipaisiblevalentin/I.git
@@ -67,7 +67,7 @@ page, alongside SHA-256 checksums (`checksums.txt`):
   build; DEB/RPM packages planned for future releases)
 - **macOS** — `istudio-ide-1.0.0-macos.dmg` (universal when built on both
   architectures)
-- **PyPI** — `pip install i-lang` for the full command-line toolchain
+- **PyPI** — `pip install i-program` for the full command-line toolchain
 
 All release artifacts are built and verified by CI from tagged commits.
 

@@ -32,7 +32,7 @@ technological independence.
 ## Installation
 
 ```bash
-pip install i-lang
+pip install i-program
 ```
 
 Then run your first program:

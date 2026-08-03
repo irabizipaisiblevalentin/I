@@ -11,7 +11,7 @@ desktop GUI application.
 I STUDIO ships with the I toolchain:
 
 ```bash
-pip install i-lang
+pip install i-program
 ```
 
 Three entry points are provided:
