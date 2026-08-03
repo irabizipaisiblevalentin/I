@@ -66,14 +66,19 @@ jobs:
         include:
           - os: ubuntu-latest
             python-version: '3.10'
+            pytest-args: --cov=src/compiler --cov=src/vm --cov-report=xml
           - os: ubuntu-latest
             python-version: '3.11'
+            pytest-args: --cov=src/compiler --cov=src/vm --cov-report=xml
           - os: ubuntu-latest
             python-version: '3.12'
+            pytest-args: --cov=src/compiler --cov=src/vm --cov-report=xml
           - os: windows-latest
             python-version: '3.12'
+            pytest-args: --cov=src/compiler --cov=src/vm --cov-report=xml
           - os: macos-latest
-            python-version: '3.12'
+            python-version: '3.11'
+            pytest-args: ''
     runs-on: ${{ matrix.os }}
     env:
       PYTHONMALLOC: malloc
@@ -89,7 +94,7 @@ jobs:
           pip install -e .
           pip install pytest pytest-cov
       - name: Run tests
-        run: pytest --cov=src/compiler --cov=src/vm --cov-report=xml
+        run: pytest ${{ matrix.pytest-args }}
       - name: Upload coverage to Codecov
         if: matrix.os == 'ubuntu-latest'
         uses: codecov/codecov-action@v4
