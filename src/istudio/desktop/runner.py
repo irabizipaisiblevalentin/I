@@ -63,11 +63,14 @@ class ScriptRunner:
                 pass
 
     def close(self) -> None:
-        """Terminate the child, close its pipes, and reap the worker thread.
+        """Terminate the child and reap the worker thread.
 
         Guarantees no ``istudio-runner`` daemon thread survives past this call:
-        a write to the cancel pipe deterministically wakes a drain blocked in
-        ``select`` (closing the fd does not reliably wake ``select`` on macOS).
+        a write to the cancel pipe wakes a drain blocked in ``select``, and the
+        drain pipe is non-blocking so it can never wedge inside ``os.read``.
+        The stdout/stderr streams are left for the drain thread to finish with
+        and only closed here after the thread has exited — closing an fd from
+        another thread mid-``os.read`` can silently rebind it to a new file.
         """
         if self._cancel_w is not None:
             try:
@@ -75,26 +78,22 @@ class ScriptRunner:
             except OSError:
                 pass
         proc = self._process
-        if proc is not None:
-            if proc.poll() is None:
-                try:
-                    proc.terminate()
-                except OSError:
-                    pass
+        if proc is not None and proc.poll() is None:
             try:
-                if proc.stdout is not None:
-                    proc.stdout.close()
-            except OSError:
-                pass
-            try:
-                if proc.stderr is not None:
-                    proc.stderr.close()
+                proc.terminate()
             except OSError:
                 pass
         thread = self._thread
         if thread is not None:
             thread.join(timeout=2.0)
             self._thread = None
+        if proc is not None:
+            for stream in (proc.stdout, proc.stderr):
+                if stream is not None:
+                    try:
+                        stream.close()
+                    except OSError:
+                        pass
         for name in ("_cancel_r", "_cancel_w"):
             fd = getattr(self, name)
             if fd is not None:
@@ -181,18 +180,27 @@ class ScriptRunner:
     def _drain_select(
         self, proc: subprocess.Popen, cancel_fd: int | None
     ) -> int:
+        import fcntl
+
         assert proc.stdout is not None
         fd = proc.stdout.fileno()
+        flags = fcntl.fcntl(fd, fcntl.F_GETFL)
+        fcntl.fcntl(fd, fcntl.F_SETFL, flags | os.O_NONBLOCK)
         fds = [fd] if cancel_fd is None else [fd, cancel_fd]
         pending = ""
         elapsed = 0.0
         while True:
-            rlist, _, _ = select.select(fds, [], [], 0.05)
+            try:
+                rlist, _, _ = select.select(fds, [], [], 0.05)
+            except OSError:
+                break
             if cancel_fd is not None and cancel_fd in rlist:
                 break
             if fd in rlist:
                 try:
                     chunk = os.read(fd, 65536)
+                except BlockingIOError:
+                    continue
                 except OSError:
                     break
                 if not chunk:
