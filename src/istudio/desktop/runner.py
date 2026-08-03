@@ -10,6 +10,7 @@ thread, so GUI consumers must marshal them back to the UI thread (e.g. with
 from __future__ import annotations
 
 import os
+import select
 import subprocess
 import sys
 import tempfile
@@ -59,6 +60,34 @@ class ScriptRunner:
             except OSError:
                 pass
 
+    def close(self) -> None:
+        """Terminate the child, close its pipes, and reap the worker thread.
+
+        Guarantees no ``istudio-runner`` daemon thread survives past this call
+        on any platform (the pipe close forces a blocked drain to wake up).
+        """
+        proc = self._process
+        if proc is not None:
+            if proc.poll() is None:
+                try:
+                    proc.terminate()
+                except OSError:
+                    pass
+            try:
+                if proc.stdout is not None:
+                    proc.stdout.close()
+            except OSError:
+                pass
+            try:
+                if proc.stderr is not None:
+                    proc.stderr.close()
+            except OSError:
+                pass
+        thread = self._thread
+        if thread is not None:
+            thread.join(timeout=2.0)
+            self._thread = None
+
     def _start(self, target: str, cleanup: str | None) -> threading.Thread:
         env = os.environ.copy()
         existing = env.get("PYTHONPATH")
@@ -89,18 +118,14 @@ class ScriptRunner:
         return thread
 
     def _watch(self, cleanup: str | None) -> None:
+        proc = self._process
         try:
-            assert self._process is not None
-            assert self._process.stdout is not None
-            elapsed = 0.0
-            for line in self._process.stdout:
-                if self._timeout is not None:
-                    elapsed += 0.05
-                    if elapsed > self._timeout and self._process.poll() is None:
-                        self._process.terminate()
-                if self._on_output is not None:
-                    self._on_output(line)
-            code = self._process.wait()
+            assert proc is not None
+            assert proc.stdout is not None
+            if os.name == "nt":
+                code = self._drain_blocking(proc)
+            else:
+                code = self._drain_select(proc)
         finally:
             if cleanup:
                 try:
@@ -112,3 +137,49 @@ class ScriptRunner:
         error = None if ok else f"process exited with code {code}"
         if self._on_done is not None:
             self._on_done(ok, error)
+
+    def _drain_blocking(self, proc: subprocess.Popen) -> int:
+        assert proc.stdout is not None
+        elapsed = 0.0
+        for line in proc.stdout:
+            if self._timeout is not None:
+                elapsed += 0.05
+                if elapsed > self._timeout and proc.poll() is None:
+                    proc.terminate()
+            if self._on_output is not None:
+                self._on_output(line)
+        return proc.wait()
+
+    def _drain_select(self, proc: subprocess.Popen) -> int:
+        assert proc.stdout is not None
+        fd = proc.stdout.fileno()
+        pending = ""
+        elapsed = 0.0
+        while True:
+            rlist, _, _ = select.select([fd], [], [], 0.05)
+            if rlist:
+                try:
+                    chunk = os.read(fd, 65536)
+                except OSError:
+                    break
+                if not chunk:
+                    break
+                pending += chunk.decode("utf-8", "replace")
+                while "\n" in pending:
+                    line, pending = pending.split("\n", 1)
+                    if self._timeout is not None:
+                        elapsed += 0.05
+                        if elapsed > self._timeout and proc.poll() is None:
+                            proc.terminate()
+                    if self._on_output is not None:
+                        self._on_output(line + "\n")
+            else:
+                if self._timeout is not None:
+                    elapsed += 0.05
+                    if elapsed > self._timeout and proc.poll() is None:
+                        proc.terminate()
+                if proc.poll() is not None:
+                    break
+        if pending and self._on_output is not None:
+            self._on_output(pending)
+        return proc.wait()

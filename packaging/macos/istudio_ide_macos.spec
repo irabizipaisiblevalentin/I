@@ -35,12 +35,14 @@ a = Analysis(
 
 pyz = PYZ(a.pure, a.zipped_data, cipher=None)
 
-app = BUNDLE(
+exe = EXE(
     pyz,
     a.scripts,
     [],
-    name="IStudioIDE.app",
+    exclude_binaries=True,
+    name="IStudioIDE",
     debug=False,
+    bootloader_ignore_signals=False,
     strip=True,
     upx=True,
     console=False,
@@ -49,6 +51,23 @@ app = BUNDLE(
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
+)
+
+coll = COLLECT(
+    exe,
+    a.binaries,
+    a.datas,
+    strip=True,
+    upx=True,
+    upx_exclude=[],
+    name="IStudioIDE",
+)
+
+app = BUNDLE(
+    coll,
+    name="IStudioIDE.app",
+    icon=None,
+    bundle_identifier="com.ilanguage.istudioide",
     info_plist={
         "CFBundleName": "I Studio IDE",
         "CFBundleDisplayName": "I Studio IDE",

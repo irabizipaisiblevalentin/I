@@ -530,6 +530,7 @@ class IStudioApp(tk.Tk):
                     self.controller.engine.set_active_tab(tab_id)
                     if not self.save_active():
                         return
+        self.controller.runner.close()
         self.destroy()
 
     def _show_about(self) -> None:
