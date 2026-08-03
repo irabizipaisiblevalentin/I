@@ -94,7 +94,7 @@ class TestPaths:
             sub = root / "sub" / "dir"
             sub.mkdir(parents=True)
             found = find_project_root(sub)
-            assert found == root
+            assert found == root.resolve()
 
     def test_find_project_root_not_found(self):
         with TemporaryDirectory() as tmpdir:

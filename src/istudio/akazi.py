@@ -139,7 +139,7 @@ class WorkspaceManager:
         return self._config
 
     def _load(self, root_path: str) -> WorkspaceConfig:
-        root = Path(root_path)
+        root = Path(root_path).resolve()
         workspace_file = root / ".istudio-workspace"
         if not workspace_file.exists():
             raise AkaziError(f"No workspace found at {root_path}")

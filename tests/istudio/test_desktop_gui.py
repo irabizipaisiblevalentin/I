@@ -154,6 +154,12 @@ def test_bottom_panel_problems(root):
 
 
 def test_app_smoke(tmp_path):
+    try:
+        probe = tk.Tk()
+        probe.withdraw()
+        probe.destroy()
+    except tk.TclError:
+        pytest.skip("no display available")
     src = str(Path(__file__).resolve().parents[2] / "src")
     tmp = str(tmp_path)
     code = f"""

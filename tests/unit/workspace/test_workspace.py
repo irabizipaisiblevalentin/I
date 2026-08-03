@@ -201,7 +201,7 @@ class TestConfigLoader:
             loader = ConfigLoader()
             found = loader.find_config(root)
             
-            assert found == config_file
+            assert found == config_file.resolve()
     
     def test_find_config_parent(self):
         """Test finding configuration file in parent directory."""
@@ -217,7 +217,7 @@ class TestConfigLoader:
             loader = ConfigLoader()
             found = loader.find_config(subdir)
             
-            assert found == config_file
+            assert found == config_file.resolve()
     
     def test_load_toml(self):
         """Test loading TOML configuration."""
@@ -332,7 +332,7 @@ class TestPathResolver:
             
             resolved = resolver.resolve("src/main.i")
             
-            assert resolved == root / "src" / "main.i"
+            assert resolved == (root / "src" / "main.i").resolve()
     
     def test_resolve_absolute(self):
         """Test resolving absolute path."""
@@ -386,7 +386,7 @@ class TestWorkspace:
             
             workspace = Workspace.load(root)
             
-            assert workspace.root == root
+            assert workspace.root == root.resolve()
             assert workspace.config.name == "test"
     
     def test_load_from_config(self):
@@ -398,7 +398,7 @@ class TestWorkspace:
             
             workspace = Workspace.load_from_config(config_file)
             
-            assert workspace.root == root
+            assert workspace.root == root.resolve()
             assert workspace.config.name == "test"
     
     def test_resolve_path(self):
@@ -411,7 +411,7 @@ class TestWorkspace:
             workspace = Workspace.load(root)
             resolved = workspace.resolve_path("src/main.i")
             
-            assert resolved == root / "src" / "main.i"
+            assert resolved == (root / "src" / "main.i").resolve()
     
     def test_validate(self):
         """Test validating workspace."""

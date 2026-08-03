@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import os
 import tempfile
+from pathlib import Path
 
 from src.istudio.indura import EditorEngine
 from src.istudio.ibikoreshingiro import DocumentPosition, EditorConfig, EditorError
@@ -223,5 +224,5 @@ def test_editor_save_file_as():
         with open(target, "r", encoding="utf-8") as f:
             assert f.read() == "andika 42"
         assert e.get_active_tab().title == "saved.i"
-        assert e.get_active_tab().file_path == os.path.abspath(target)
+        assert e.get_active_tab().file_path == str(Path(target).resolve())
         assert e.get_active_tab().is_dirty is False

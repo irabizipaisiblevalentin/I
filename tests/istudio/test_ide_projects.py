@@ -103,10 +103,16 @@ def test_delete_root_rejected(service: ProjectService) -> None:
 
 
 def test_safe_join() -> None:
-    base = r"C:\work\proj"
-    assert safe_join(base, "src", "main.i")
-    assert safe_join(base, "..") is None
-    assert safe_join(base, "..\\..\\etc\\passwd") is None
+    if os.sep == "\\":
+        base = r"C:\work\proj"
+        assert safe_join(base, "src", "main.i")
+        assert safe_join(base, "..") is None
+        assert safe_join(base, "..\\..\\etc\\passwd") is None
+    else:
+        base = "/work/proj"
+        assert safe_join(base, "src", "main.i")
+        assert safe_join(base, "..") is None
+        assert safe_join(base, "../../etc/passwd") is None
 
 
 def test_all_templates_metadata(service: ProjectService) -> None:

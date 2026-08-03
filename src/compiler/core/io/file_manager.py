@@ -21,7 +21,7 @@ class FileManager:
         Args:
             root: Root directory for relative paths
         """
-        self._root = root or Path.cwd()
+        self._root = (root or Path.cwd()).resolve()
         self._cache: dict[Path, str] = {}
 
     @property

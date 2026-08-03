@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 import os
 import tempfile
+from pathlib import Path
 
 from src.istudio.akazi import WorkspaceManager, ProjectManager
 from src.istudio.ibikoreshingiro import ProjectConfig, ProjectType, PROJECT_TEMPLATES
@@ -20,7 +21,7 @@ def test_workspace_load_or_create():
     with tempfile.TemporaryDirectory() as tmp:
         ws = WorkspaceManager(tmp)
         cfg = ws.load_or_create(tmp)
-        assert cfg.root_path == tmp
+        assert cfg.root_path == str(Path(tmp).resolve())
         assert os.path.exists(os.path.join(tmp, ".istudio-workspace"))
 
 
@@ -60,7 +61,7 @@ def test_workspace_extensions():
 def test_workspace_get_root():
     with tempfile.TemporaryDirectory() as tmp:
         ws = WorkspaceManager(tmp)
-        assert ws.get_root_path() == tmp
+        assert ws.get_root_path() == str(Path(tmp).resolve())
 
 
 def test_project_manager_create():
