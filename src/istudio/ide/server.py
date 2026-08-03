@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import os
 import queue
+import socketserver
 import sys
 import threading
 import traceback
@@ -643,8 +644,25 @@ class IdeApplication:
             session.stop()
 
 
-def make_server(host: str, port: int, app: IdeApplication) -> ThreadingHTTPServer:
-    server = ThreadingHTTPServer((host, port), _Handler)
-    server.daemon_threads = True
+class _FastHTTPServer(ThreadingHTTPServer):
+    """ThreadingHTTPServer whose bind skips the blocking reverse-DNS lookup.
+
+    ``HTTPServer.server_bind`` calls ``socket.getfqdn(host)`` on every startup,
+    which on macOS can stall for seconds inside the system resolver and race
+    with garbage collection running in background daemon threads. We bind
+    normally and set ``server_name`` directly instead.
+    """
+
+    daemon_threads = True
+
+    def server_bind(self) -> None:
+        socketserver.TCPServer.server_bind(self)
+        host, port = self.server_address[:2]
+        self.server_name = host
+        self.server_port = port
+
+
+def make_server(host: str, port: int, app: IdeApplication) -> _FastHTTPServer:
+    server = _FastHTTPServer((host, port), _Handler)
     _Handler.app = app
     return server
