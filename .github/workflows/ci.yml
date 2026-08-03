@@ -75,6 +75,8 @@ jobs:
           - os: macos-latest
             python-version: '3.12'
     runs-on: ${{ matrix.os }}
+    env:
+      PYTHONMALLOC: malloc
     steps:
       - uses: actions/checkout@v4
       - name: Set up Python ${{ matrix.python-version }}

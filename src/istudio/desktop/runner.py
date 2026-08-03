@@ -10,7 +10,6 @@ thread, so GUI consumers must marshal them back to the UI thread (e.g. with
 from __future__ import annotations
 
 import os
-import select
 import subprocess
 import sys
 import tempfile
@@ -39,8 +38,7 @@ class ScriptRunner:
         self._timeout = timeout
         self._process: subprocess.Popen | None = None
         self._thread: threading.Thread | None = None
-        self._cancel_r: int | None = None
-        self._cancel_w: int | None = None
+        self._cancel_event = threading.Event()
 
     @property
     def is_running(self) -> bool:
@@ -65,18 +63,12 @@ class ScriptRunner:
     def close(self) -> None:
         """Terminate the child and reap the worker thread.
 
-        Guarantees no ``istudio-runner`` daemon thread survives past this call:
-        a write to the cancel pipe wakes a drain blocked in ``select``, and the
-        drain pipe is non-blocking so it can never wedge inside ``os.read``.
-        The stdout/stderr streams are left for the drain thread to finish with
-        and only closed here after the thread has exited — closing an fd from
-        another thread mid-``os.read`` can silently rebind it to a new file.
+        Guarantees no ``istudio-runner`` daemon thread survives past this call.
+        The drain loop never blocks in ``select`` or ``os.read`` (the pipe is
+        non-blocking and the loop parks on a plain ``Event``), so the join
+        below always completes once the child has been killed.
         """
-        if self._cancel_w is not None:
-            try:
-                os.write(self._cancel_w, b"\x00")
-            except OSError:
-                pass
+        self._cancel_event.set()
         proc = self._process
         if proc is not None and proc.poll() is None:
             try:
@@ -86,6 +78,12 @@ class ScriptRunner:
         thread = self._thread
         if thread is not None:
             thread.join(timeout=2.0)
+            if thread.is_alive() and proc is not None and proc.poll() is None:
+                try:
+                    proc.kill()
+                except OSError:
+                    pass
+            thread.join(timeout=5.0)
             self._thread = None
         if proc is not None:
             for stream in (proc.stdout, proc.stderr):
@@ -94,27 +92,9 @@ class ScriptRunner:
                         stream.close()
                     except OSError:
                         pass
-        for name in ("_cancel_r", "_cancel_w"):
-            fd = getattr(self, name)
-            if fd is not None:
-                try:
-                    os.close(fd)
-                except OSError:
-                    pass
-                setattr(self, name, None)
 
     def _start(self, target: str, cleanup: str | None) -> threading.Thread:
-        if self._cancel_r is not None:
-            try:
-                os.close(self._cancel_r)
-            except OSError:
-                pass
-        if self._cancel_w is not None:
-            try:
-                os.close(self._cancel_w)
-            except OSError:
-                pass
-        self._cancel_r, self._cancel_w = os.pipe()
+        self._cancel_event.clear()
 
         env = os.environ.copy()
         existing = env.get("PYTHONPATH")
@@ -152,7 +132,7 @@ class ScriptRunner:
             if os.name == "nt":
                 code = self._drain_blocking(proc)
             else:
-                code = self._drain_select(proc, self._cancel_r)
+                code = self._drain_poll(proc)
         finally:
             if cleanup:
                 try:
@@ -177,50 +157,36 @@ class ScriptRunner:
                 self._on_output(line)
         return proc.wait()
 
-    def _drain_select(
-        self, proc: subprocess.Popen, cancel_fd: int | None
-    ) -> int:
+    def _drain_poll(self, proc: subprocess.Popen) -> int:
         import fcntl
 
         assert proc.stdout is not None
         fd = proc.stdout.fileno()
         flags = fcntl.fcntl(fd, fcntl.F_GETFL)
         fcntl.fcntl(fd, fcntl.F_SETFL, flags | os.O_NONBLOCK)
-        fds = [fd] if cancel_fd is None else [fd, cancel_fd]
         pending = ""
         elapsed = 0.0
-        while True:
+        while not self._cancel_event.is_set():
             try:
-                rlist, _, _ = select.select(fds, [], [], 0.05)
-            except OSError:
-                break
-            if cancel_fd is not None and cancel_fd in rlist:
-                break
-            if fd in rlist:
-                try:
-                    chunk = os.read(fd, 65536)
-                except BlockingIOError:
-                    continue
-                except OSError:
-                    break
-                if not chunk:
-                    break
-                pending += chunk.decode("utf-8", "replace")
-                while "\n" in pending:
-                    line, pending = pending.split("\n", 1)
-                    if self._timeout is not None:
-                        elapsed += 0.05
-                        if elapsed > self._timeout and proc.poll() is None:
-                            proc.terminate()
-                    if self._on_output is not None:
-                        self._on_output(line + "\n")
-            else:
+                chunk = os.read(fd, 65536)
+            except BlockingIOError:
                 if self._timeout is not None:
-                    elapsed += 0.05
+                    elapsed += 0.02
                     if elapsed > self._timeout and proc.poll() is None:
                         proc.terminate()
                 if proc.poll() is not None:
                     break
+                self._cancel_event.wait(0.02)
+                continue
+            except OSError:
+                break
+            if not chunk:
+                break
+            pending += chunk.decode("utf-8", "replace")
+            while "\n" in pending:
+                line, pending = pending.split("\n", 1)
+                if self._on_output is not None:
+                    self._on_output(line + "\n")
         if pending and self._on_output is not None:
             self._on_output(pending)
         return proc.wait()
