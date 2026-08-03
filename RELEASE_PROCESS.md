@@ -221,24 +221,31 @@ This document describes the release process for the I Programming Language.
 
 3. **Sign Artifacts**
    ```bash
-   gpg --detach-sign --armor dist/i-lang-X.Y.Z.tar.gz
-   gpg --detach-sign --armor dist/i_lang-X.Y.Z-py3-none-any.whl
+   gpg --detach-sign --armor dist/i_program-X.Y.Z.tar.gz
+   gpg --detach-sign --armor dist/i_program-X.Y.Z-py3-none-any.whl
    ```
 
-### Step 7: Upload to PyPI
+### Step 7: Publish to PyPI
 
-1. **Upload to Test PyPI**
-   ```bash
-   python -m twine upload --repository testpypi dist/*
-   ```
+The distribution is published as **`i-program`** — the name `i-lang` is blocked
+on PyPI by its name-similarity guard (existing `ilang` / `i-language` projects;
+only a PyPI admin can exempt it).
 
-2. **Test from Test PyPI**
+1. **Automated (primary):** pushing tag `vX.Y.Z` triggers
+   `.github/workflows/cd.yml`, which builds the package and publishes it to
+   Test PyPI then PyPI via **trusted-publisher OIDC** (no tokens). The trusted
+   publishers are registered on both indexes for:
+   - Project name `i-program`, GitHub owner `irabizipaisiblevalentin`,
+     repository `I`, workflow `cd.yml`, environments `testpypi` / `pypi`.
+
+2. **Verify on Test PyPI**
    ```bash
    pip install --index-url https://test.pypi.org/simple/ i-program
    ```
 
-3. **Upload to PyPI**
+3. **Manual fallback (requires an API token)**
    ```bash
+   python -m twine upload --repository testpypi dist/*
    python -m twine upload dist/*
    ```
 
@@ -321,7 +328,7 @@ YYYY-MM-DD
 
 ## Downloads
 - [Source](https://github.com/irabizipaisiblevalentin/I/archive/refs/tags/vX.Y.Z.tar.gz)
-- [PyPI](https://pypi.org/project/i-lang/X.Y.Z/)
+- [PyPI](https://pypi.org/project/i-program/X.Y.Z/)
 ```
 
 ### Announcement Channels
@@ -432,7 +439,7 @@ Rollback if:
 - Changelog generation
 - Artifact building
 - Artifact signing
-- PyPI upload (manual trigger)
+- PyPI upload (automated via trusted-publisher CD on tag push)
 - GitHub release creation
 
 ### Manual Steps
