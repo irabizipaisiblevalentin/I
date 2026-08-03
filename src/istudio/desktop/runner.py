@@ -39,6 +39,8 @@ class ScriptRunner:
         self._timeout = timeout
         self._process: subprocess.Popen | None = None
         self._thread: threading.Thread | None = None
+        self._cancel_r: int | None = None
+        self._cancel_w: int | None = None
 
     @property
     def is_running(self) -> bool:
@@ -63,9 +65,15 @@ class ScriptRunner:
     def close(self) -> None:
         """Terminate the child, close its pipes, and reap the worker thread.
 
-        Guarantees no ``istudio-runner`` daemon thread survives past this call
-        on any platform (the pipe close forces a blocked drain to wake up).
+        Guarantees no ``istudio-runner`` daemon thread survives past this call:
+        a write to the cancel pipe deterministically wakes a drain blocked in
+        ``select`` (closing the fd does not reliably wake ``select`` on macOS).
         """
+        if self._cancel_w is not None:
+            try:
+                os.write(self._cancel_w, b"\x00")
+            except OSError:
+                pass
         proc = self._process
         if proc is not None:
             if proc.poll() is None:
@@ -87,8 +95,28 @@ class ScriptRunner:
         if thread is not None:
             thread.join(timeout=2.0)
             self._thread = None
+        for name in ("_cancel_r", "_cancel_w"):
+            fd = getattr(self, name)
+            if fd is not None:
+                try:
+                    os.close(fd)
+                except OSError:
+                    pass
+                setattr(self, name, None)
 
     def _start(self, target: str, cleanup: str | None) -> threading.Thread:
+        if self._cancel_r is not None:
+            try:
+                os.close(self._cancel_r)
+            except OSError:
+                pass
+        if self._cancel_w is not None:
+            try:
+                os.close(self._cancel_w)
+            except OSError:
+                pass
+        self._cancel_r, self._cancel_w = os.pipe()
+
         env = os.environ.copy()
         existing = env.get("PYTHONPATH")
         env["PYTHONPATH"] = _SRC_DIR + (os.pathsep + existing if existing else "")
@@ -125,7 +153,7 @@ class ScriptRunner:
             if os.name == "nt":
                 code = self._drain_blocking(proc)
             else:
-                code = self._drain_select(proc)
+                code = self._drain_select(proc, self._cancel_r)
         finally:
             if cleanup:
                 try:
@@ -150,14 +178,19 @@ class ScriptRunner:
                 self._on_output(line)
         return proc.wait()
 
-    def _drain_select(self, proc: subprocess.Popen) -> int:
+    def _drain_select(
+        self, proc: subprocess.Popen, cancel_fd: int | None
+    ) -> int:
         assert proc.stdout is not None
         fd = proc.stdout.fileno()
+        fds = [fd] if cancel_fd is None else [fd, cancel_fd]
         pending = ""
         elapsed = 0.0
         while True:
-            rlist, _, _ = select.select([fd], [], [], 0.05)
-            if rlist:
+            rlist, _, _ = select.select(fds, [], [], 0.05)
+            if cancel_fd is not None and cancel_fd in rlist:
+                break
+            if fd in rlist:
                 try:
                     chunk = os.read(fd, 65536)
                 except OSError:
